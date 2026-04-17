@@ -4,7 +4,79 @@
 
 ## 1. Definisi Sistem
 
-**E-Voting Kelurahan** adalah sistem pemungutan suara elektronik berskala kelurahan/desa yang digunakan untuk pemilihan internal seperti **Ketua RT, Ketua RW, atau musyawarah kelurahan lainnya**. Sistem ini menggantikan proses coblos manual dengan aplikasi berbasis web yang dapat diakses melalui perangkat di TPS kelurahan.
+### 1.1 Sistem Informasi
+
+**Sistem Informasi** adalah sekumpulan komponen yang saling terhubung — meliputi perangkat keras, perangkat lunak, data, prosedur, dan manusia — yang bekerja sama untuk mengumpulkan, memproses, menyimpan, dan mendistribusikan informasi guna mendukung pengambilan keputusan, koordinasi, dan pengendalian dalam suatu organisasi (Laudon & Laudon, 2020).
+
+Secara umum, sistem informasi memiliki **lima komponen utama**:
+
+| Komponen        | Penjelasan                                                         |
+| --------------- | ------------------------------------------------------------------ |
+| **Input**       | Data mentah yang dikumpulkan dari sumber internal maupun eksternal |
+| **Proses**      | Pengolahan data menjadi informasi yang bermakna                    |
+| **Output**      | Informasi yang dihasilkan dan disajikan kepada pengguna            |
+| **Penyimpanan** | Tempat data dan informasi disimpan secara terstruktur (database)   |
+| **Umpan balik** | Mekanisme evaluasi untuk perbaikan sistem secara berkelanjutan     |
+
+### 1.2 Voting (Pemungutan Suara)
+
+**Voting** atau pemungutan suara adalah proses pengambilan keputusan secara kolektif di mana setiap peserta yang berhak memberikan satu suara untuk memilih kandidat, opsi, atau kebijakan tertentu. Voting merupakan instrumen utama dalam demokrasi, baik di tingkat nasional (pemilu) maupun di tingkat lokal (musyawarah masyarakat).
+
+Prinsip dasar voting yang demokratis:
+
+- **Langsung** — Pemilih memilih secara langsung tanpa perantara
+- **Umum** — Semua warga yang memenuhi syarat berhak memilih
+- **Bebas** — Tidak ada tekanan atau paksaan dalam menentukan pilihan
+- **Rahasia** — Pilihan pemilih tidak diketahui oleh pihak lain
+- **Jujur & Adil** — Proses dan penghitungan dilakukan secara transparan
+
+### 1.3 E-Voting (Electronic Voting)
+
+**E-Voting** atau _Electronic Voting_ adalah metode pemungutan suara yang menggunakan teknologi elektronik — berupa perangkat keras dan perangkat lunak — untuk menggantikan proses pencoblosan manual dengan surat suara kertas. E-voting mencakup proses identifikasi pemilih, pemberian suara, penghitungan, hingga rekapitulasi yang dilakukan secara digital.
+
+Menurut International Foundation for Electoral Systems (IFES), e-voting dapat dikategorikan menjadi:
+
+| Jenis                                   | Deskripsi                                                                | Contoh                          |
+| --------------------------------------- | ------------------------------------------------------------------------ | ------------------------------- |
+| **DRE** _(Direct Recording Electronic)_ | Pemilih memilih langsung pada layar perangkat elektronik                 | Mesin voting touchscreen di TPS |
+| **Internet Voting**                     | Pemilih memberikan suara melalui jaringan internet dari lokasi mana saja | Voting online dari rumah        |
+| **Optical Scan**                        | Surat suara fisik di-scan dan dihitung secara elektronik                 | Kertas suara di-scan mesin      |
+
+### 1.4 Sistem Informasi E-Voting
+
+**Sistem Informasi E-Voting** adalah penerapan konsep sistem informasi secara spesifik pada domain pemungutan suara elektronik. Sistem ini mengintegrasikan komponen input (data pemilih & kandidat), proses (verifikasi identitas, pencatatan suara, penghitungan otomatis), output (hasil pemilihan real-time), penyimpanan (database terenkripsi), dan umpan balik (audit log & verifikasi token) ke dalam satu platform digital yang saling terhubung.
+
+```
+Hubungan Konsep:
+
+  Sistem Informasi (teori umum)
+        │
+        ▼
+  Voting / Pemungutan Suara (domain/konteks)
+        │
+        ▼
+  E-Voting (metode digital)
+        │
+        ▼
+  Sistem Informasi E-Voting (penerapan SI pada e-voting)
+        │
+        ▼
+  SI E-Voting Kelurahan (implementasi spesifik skala kelurahan)
+```
+
+### 1.5 E-Voting Tingkat Kelurahan
+
+**E-Voting Kelurahan** adalah implementasi sistem informasi e-voting berskala kelurahan/desa yang digunakan untuk pemilihan internal seperti **Ketua RT, Ketua RW, atau musyawarah kelurahan lainnya**. Sistem ini menggantikan proses coblos manual dengan aplikasi berbasis web yang dapat diakses melalui perangkat di TPS kelurahan.
+
+Perbedaan utama dengan e-voting skala nasional:
+
+| Aspek             | E-Voting Nasional                                    | E-Voting Kelurahan                              |
+| ----------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| **Skala**         | Jutaan pemilih, ribuan TPS                           | 200–2.000 pemilih, 1–3 TPS                      |
+| **Infrastruktur** | Data center besar, jaringan nasional                 | Server lokal/cloud sederhana, WiFi kelurahan    |
+| **Regulasi**      | UU Pemilu, diawasi KPU/Bawaslu                       | Peraturan kelurahan, diawasi panitia lokal      |
+| **Kompleksitas**  | Multi-level (TPS → kecamatan → kabupaten → nasional) | Single-level (langsung dari TPS ke hasil akhir) |
+| **Biaya**         | Miliaran rupiah                                      | Rp 500rb–2 juta per pemilihan                   |
 
 ### Ruang Lingkup
 
