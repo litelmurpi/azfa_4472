@@ -29,8 +29,6 @@
 
 ## 2. Struktur Organisasi
 
-![Struktur Organisasi E-Voting Kelurahan](assets/struktur_organisasi_evoting.svg)
-
 ```
                     ┌─────────────────┐
                     │  Lurah / Kades  │  ← Penanggung jawab utama
@@ -71,8 +69,6 @@
 ---
 
 ## 3. Alur Bisnis: Sistem Lama (Manual)
-
-![Alur Sistem Lama Manual](assets/alur_sistem_lama_manual.svg)
 
 ### Tahapan Proses Manual di Kelurahan
 
@@ -121,8 +117,6 @@
 
 ## 5. Alur Bisnis Sistem E-Voting Kelurahan (Usulan)
 
-![Alur Sistem E-Voting](assets/alur_sistem_evoting.svg)
-
 ### Tahapan Proses E-Voting
 
 | No  | Tahap                     | Proses                                                                           | Keterangan                                    |
@@ -134,7 +128,7 @@
 | 5   | **Penghitungan otomatis** | Sistem hitung agregat suara secara real-time                                     | Hasil bisa dipantau live oleh panitia & saksi |
 | 6   | **Pengumuman hasil**      | Setelah TPS tutup, hasil final ditampilkan di dashboard publik                   | Saksi memverifikasi, Lurah mengesahkan        |
 
-### Diagram Alur Sederhana
+### Diagram Alur
 
 ```
 Warga datang ke TPS
@@ -151,10 +145,17 @@ Warga datang ke TPS
                     │                 │
                     ▼                 ▼
            ┌──────────────┐   ┌──────────────┐
-           │ Buka halaman │   │ Ditolak,     │
-           │ voting di    │   │ data tidak   │
-           │ tablet       │   │ terdaftar    │
+           │ Generate OTP │   │ Ditolak,     │
+           │ + cetak slip │   │ data tidak   │
+           │ ke pemilih   │   │ terdaftar    │
            └──────┬───────┘   └──────────────┘
+                  │
+                  ▼
+           ┌──────────────┐
+           │ Pemilih input│
+           │ OTP di tablet│
+           │ (autentikasi)│
+           └──────┬───────┘
                   │
                   ▼
            ┌──────────────┐
@@ -180,22 +181,329 @@ Warga datang ke TPS
 
 ---
 
-## 6. Ringkasan Analisis
+## 6. Rancangan Skema Database
+
+Prinsip utama: **identitas pemilih dan isi suara tidak boleh bisa di-JOIN secara langsung**. Keduanya dihubungkan hanya melalui token anonim satu arah.
+
+### Entitas & Relasi
+
+```
+┌─────────────────────────┐        ┌──────────────────────────┐
+│ pemilih                 │        │ kandidat                 │
+│─────────────────────────│        │──────────────────────────│
+│ PK  id_pemilih (UUID)   │        │ PK  id_kandidat (UUID)   │
+│     nik (VARCHAR, hash) │        │     nama (VARCHAR)       │
+│     nama (VARCHAR)      │        │     foto_url (TEXT)      │
+│     rt (VARCHAR)        │        │     visi_misi (TEXT)     │
+│     rw (VARCHAR)        │        │     id_pemilihan (FK)    │
+│     status_voting (BOOL)│        └──────────────────────────┘
+│     id_pemilihan (FK)   │
+│     created_at          │
+└─────────┬───────────────┘
+          │ saat verifikasi, generate token
+          │ lalu putus relasi langsung
+          ▼
+┌─────────────────────────┐        ┌──────────────────────────┐
+│ sesi_voting             │        │ suara                    │
+│─────────────────────────│        │──────────────────────────│
+│ PK  id_sesi (UUID)      │        │ PK  id_suara (UUID)      │
+│     token_otp (VARCHAR) │        │     id_sesi (FK) ──────▶ │ id_sesi
+│     id_pemilih (FK)     │        │     id_kandidat (FK)     │
+│     expires_at          │        │     waktu_submit         │
+│     used (BOOL)         │        │     token_bukti (VARCHAR)│
+└─────────────────────────┘        └──────────────────────────┘
+
+┌─────────────────────────┐        ┌──────────────────────────┐
+│ pemilihan               │        │ audit_log                │
+│─────────────────────────│        │──────────────────────────│
+│ PK  id_pemilihan (UUID) │        │ PK  id_log (UUID)        │
+│     nama_pemilihan      │        │     waktu (TIMESTAMP)    │
+│     tanggal_mulai       │        │     aksi (VARCHAR)       │
+│     tanggal_selesai     │        │     pelaku (VARCHAR)     │
+│     status (ENUM)       │        │     detail (TEXT)        │
+│     dibuat_oleh (FK)    │        │     ip_address           │
+└─────────────────────────┘        └──────────────────────────┘
+```
+
+### Penjelasan Desain Privasi Database
+
+| Keputusan Desain | Alasan |
+|---|---|
+| NIK disimpan dalam bentuk hash (bcrypt/SHA-256) | NIK asli tidak tersimpan di database — hanya hash untuk verifikasi |
+| Tabel `suara` tidak menyimpan `id_pemilih` langsung | Suara hanya terhubung ke `id_sesi`, bukan ke identitas warga |
+| `sesi_voting` dihapus/di-nullify setelah suara masuk | Memutus jalur JOIN antara pemilih ↔ suara setelah voting selesai |
+| `token_bukti` di tabel `suara` bersifat satu arah | Pemilih bisa verifikasi suaranya tercatat, tanpa mengungkap pilihannya |
+
+### Aturan Integritas Data
+
+```sql
+-- Pastikan satu pemilih hanya bisa submit satu suara per pemilihan
+CREATE UNIQUE INDEX idx_satu_suara 
+  ON sesi_voting(id_pemilih, id_pemilihan) WHERE used = TRUE;
+
+-- Sesi voting kadaluarsa otomatis setelah 10 menit
+-- (dikelola di application layer, bukan DB constraint)
+
+-- Audit log tidak boleh di-UPDATE atau di-DELETE
+-- (enforced via application role — akun DB audit hanya INSERT)
+```
+
+---
+
+## 7. Rancangan Keamanan Sistem
+
+### 7.1 Arsitektur Keamanan Berlapis
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Lapisan 1 — Jaringan                                   │
+│  HTTPS wajib (TLS 1.2+), sertifikat self-signed untuk   │
+│  LAN atau Let's Encrypt untuk cloud                     │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│  Lapisan 2 — Autentikasi                                │
+│  OTP 6 digit, berlaku 10 menit, single-use              │
+│  Role-based access: Admin / Petugas / Saksi / Publik    │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│  Lapisan 3 — Aplikasi                                   │
+│  Input validation & sanitasi (cegah SQL injection, XSS) │
+│  CSRF token pada setiap form submission                 │
+│  Rate limiting: maks. 5 request/menit per IP            │
+└───────────────────────────┬─────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────┐
+│  Lapisan 4 — Database                                   │
+│  NIK di-hash sebelum disimpan                           │
+│  Enkripsi kolom sensitif (AES-256)                      │
+│  Akun DB terpisah per role (read-only, write, audit)    │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 7.2 Mekanisme Autentikasi Pemilih (OTP)
+
+Menggantikan alur "petugas buka tablet langsung", autentikasi dua langkah ini memastikan hanya pemilih yang bersangkutan yang bisa submit suara:
+
+```
+Petugas TPS                  Sistem                    Pemilih
+     │                          │                          │
+     │── input NIK pemilih ────▶│                          │
+     │                          │── validasi di DPT        │
+     │                          │── generate OTP 6 digit   │
+     │◀─ tampil OTP di layar ───│                          │
+     │                          │                          │
+     │── cetak/tunjuk OTP ─────────────────────────────▶  │
+     │   ke pemilih             │                          │
+     │                          │                          │
+     │   (petugas mundur,       │◀── input OTP di tablet ──│
+     │    tidak melihat layar)  │                          │
+     │                          │── OTP valid? ────────────│
+     │                          │── buka halaman voting ──▶│
+     │                          │                          │
+     │                          │◀── pilih & submit ───────│
+     │                          │── suara tersimpan        │
+     │                          │── OTP di-invalidate      │
+```
+
+### 7.3 Pembatasan Akses Admin (Role-Based Access Control)
+
+| Role | Hak Akses | Tidak Bisa Mengakses |
+|---|---|---|
+| **Super Admin (Lurah)** | Buka/tutup pemilihan, export hasil resmi | Data suara individual, log OTP |
+| **Admin IT** | Import DPT, kelola kandidat, pantau status sistem | Isi suara, token OTP pemilih |
+| **Petugas TPS** | Generate OTP untuk pemilih yang terverifikasi | Dashboard hasil, data pemilih lain |
+| **Saksi** | Pantau dashboard hasil real-time (read-only) | Data pemilih, log sistem |
+| **Publik** | Verifikasi token bukti suara (hanya status: tercatat/tidak) | Semua data lain |
+
+### 7.4 Checklist Keamanan Sebelum Pemilihan
+
+- [ ] Sertifikat HTTPS aktif dan valid
+- [ ] Backup database terakhir berhasil diverifikasi
+- [ ] Semua akun admin sudah ganti password default
+- [ ] Uji coba SQL injection pada form input (OWASP Top 10 dasar)
+- [ ] Pastikan OTP expired setelah 10 menit (uji manual)
+- [ ] Akun petugas TPS tidak bisa akses halaman hasil
+- [ ] Log audit aktif dan mencatat semua aksi admin
+
+---
+
+## 8. Rancangan Kontingensi & Disaster Recovery
+
+### 8.1 Skenario Risiko & Penanganan
+
+| Skenario | Probabilitas | Dampak | Penanganan |
+|---|---|---|---|
+| WiFi/internet mati | Tinggi | Tinggi | Gunakan hotspot HP panitia sebagai backup; server lokal tetap jalan |
+| Server crash / restart | Sedang | Tinggi | Data aman di DB; sistem otomatis reconnect; backup terakhir dimuat |
+| Perangkat TPS rusak | Sedang | Sedang | Siapkan 1 perangkat cadangan; OTP bisa diinput dari perangkat lain |
+| Pemilih lupa/tidak bisa baca OTP | Tinggi | Rendah | Petugas generate ulang OTP (invalidate yang lama otomatis) |
+| Manipulasi data oleh orang dalam | Rendah | Sangat Tinggi | Audit log immutable + saksi bisa akses dashboard mandiri |
+| Listrik padam | Sedang | Tinggi | UPS untuk server minimal 2 jam; jika padam total → prosedur penghentian darurat |
+
+### 8.2 Prosedur Backup
+
+```
+Jadwal Backup Otomatis:
+├── Setiap 30 menit selama pemilihan berlangsung
+│     → Backup ke folder lokal + salinan ke USB/cloud
+├── Setelah TPS tutup
+│     → Full backup + export CSV hasil sebagai arsip offline
+└── Sebelum pemilihan dibuka
+      → Snapshot database awal (baseline untuk audit)
+
+Lokasi Backup:
+├── Primer  : Folder /backup di server lokal
+├── Sekunder: USB flashdisk yang disegel oleh panitia & saksi
+└── Tersier : Cloud storage (Google Drive kelurahan) jika tersedia
+```
+
+### 8.3 Prosedur Penghentian Darurat
+
+Jika sistem tidak bisa dipulihkan dalam 30 menit:
+
+1. Panitia umumkan penghentian sementara kepada warga
+2. Admin export data suara yang sudah masuk (CSV) — ditandatangani saksi
+3. Evaluasi bersama: lanjut setelah perbaikan, atau fallback ke manual
+4. Jika fallback ke manual: suara digital yang sudah masuk **tetap sah** dan dihitung bersama hasil manual
+5. Buat berita acara insiden yang ditandatangani semua pihak
+
+---
+
+## 9. Rancangan Antarmuka & Aksesibilitas
+
+### 9.1 Prinsip Desain Antarmuka
+
+Mengingat segmen pengguna utama adalah **warga 40–70 tahun** yang mungkin tidak terbiasa dengan teknologi:
+
+| Prinsip | Implementasi |
+|---|---|
+| **Tampilan minimal** | Maksimal 1 aksi per layar — tidak ada menu atau tombol yang tidak relevan |
+| **Font besar** | Ukuran teks minimal 18px, tombol aksi minimal 48px tinggi |
+| **Kontras tinggi** | Rasio kontras warna ≥ 4.5:1 (standar WCAG AA) |
+| **Instruksi verbal** | Setiap langkah disertai teks instruksi singkat dalam bahasa sehari-hari |
+| **Konfirmasi sebelum submit** | Tampilkan ringkasan pilihan dan minta konfirmasi eksplisit sebelum suara dikirim |
+| **Tidak ada timeout singkat** | Sesi voting tidak kedaluwarsa selama pemilih masih aktif di halaman |
+
+### 9.2 Alur Layar (Screen Flow)
+
+```
+[Layar 1]              [Layar 2]              [Layar 3]
+┌────────────┐         ┌────────────┐         ┌────────────┐
+│ Masukkan   │  ──▶    │ Pilih satu │  ──▶    │ Konfirmasi │
+│ Kode OTP   │         │ kandidat   │         │ pilihan    │
+│            │         │            │         │ Anda:      │
+│ [_ _ _ _ _ _]│        │ ○ Budi S.  │         │ BUDI S.    │
+│            │         │ ○ Siti R.  │         │            │
+│ [LANJUT]   │         │ ○ Ahmad W. │         │ [UBAH]     │
+└────────────┘         │            │         │ [KIRIM ✓]  │
+                       │ [LANJUT]   │         └────────────┘
+                       └────────────┘
+                                                     │
+                                                     ▼
+                                             [Layar 4]
+                                             ┌────────────┐
+                                             │ Suara Anda │
+                                             │ BERHASIL   │
+                                             │ tercatat ✓ │
+                                             │            │
+                                             │ Kode bukti:│
+                                             │ #A7X-2931  │
+                                             └────────────┘
+```
+
+### 9.3 Panduan untuk Petugas TPS
+
+- Petugas **wajib** membalikkan badan atau mengalihkan pandangan saat pemilih menginput OTP dan memilih kandidat
+- Jika pemilih meminta bantuan (lansia, disabilitas), satu petugas **dan** satu saksi mendampingi bersama — tidak boleh hanya petugas sendiri
+- Setelah suara terkirim, minta pemilih mencatat atau difotokan kode bukti
+
+---
+
+## 10. Ringkasan Analisis Sistem
 
 Sistem e-voting tingkat kelurahan yang ideal harus memenuhi tiga lapisan desain:
 
-**Lapisan Identitas** — Verifikasi pemilih menggunakan NIK/KTP yang dicocokkan dengan DPT digital kelurahan. Sistem memastikan setiap warga hanya bisa memilih satu kali melalui penandaan status di database.
+**Lapisan Identitas** — Verifikasi pemilih menggunakan NIK/KTP yang dicocokkan dengan DPT digital kelurahan. NIK tidak disimpan langsung melainkan dalam bentuk hash. Sistem memastikan setiap warga hanya bisa memilih satu kali melalui penandaan status di database, dan OTP single-use memastikan hanya pemilih yang bersangkutan yang bisa submit suara.
 
-**Lapisan Suara** — Pilihan pemilih disimpan terpisah dari identitasnya di database. Setiap suara mendapat token unik yang bisa digunakan pemilih untuk mengonfirmasi bahwa suaranya tercatat, tanpa mengungkap isi pilihannya kepada orang lain.
+**Lapisan Suara** — Pilihan pemilih disimpan terpisah dari identitasnya di database. Relasi antara sesi voting dan identitas pemilih diputus setelah suara masuk. Setiap suara mendapat token bukti yang bisa digunakan pemilih untuk mengonfirmasi bahwa suaranya tercatat, tanpa mengungkap isi pilihannya kepada orang lain.
 
-**Lapisan Audit** — Seluruh aktivitas tercatat dalam log sistem (waktu voting, jumlah pemilih, status DPT). Saksi kandidat dan panitia dapat memantau dashboard hasil secara real-time. Setelah pemilihan, rekap digital dapat dicetak sebagai dokumen resmi.
+**Lapisan Audit** — Seluruh aktivitas tercatat dalam log sistem yang bersifat append-only (tidak bisa diedit). Saksi kandidat dan panitia dapat memantau dashboard hasil secara real-time dengan akses read-only yang terisolasi. Setelah pemilihan, rekap digital dapat dicetak sebagai dokumen resmi yang ditandatangani semua pihak.
 
 ### Kebutuhan Sistem
 
 | Komponen          | Spesifikasi Minimum                                                |
 | ----------------- | ------------------------------------------------------------------ |
 | **Server**        | 1 unit laptop/PC sebagai server lokal atau cloud hosting sederhana |
-| **Perangkat TPS** | 2–3 tablet/laptop dengan browser modern                            |
-| **Jaringan**      | WiFi lokal (LAN) atau koneksi internet                             |
+| **Perangkat TPS** | 2–3 tablet/laptop dengan browser modern + 1 cadangan              |
+| **Jaringan**      | WiFi lokal (LAN) atau koneksi internet + hotspot cadangan          |
 | **Software**      | Aplikasi web (PHP/Node.js + MySQL/PostgreSQL)                      |
-| **Backup**        | Backup database otomatis setiap 30 menit selama pemilihan          |
+| **Backup**        | Backup database otomatis setiap 30 menit + USB tersegel + cloud   |
+| **UPS**           | Minimal 2 jam untuk server agar tahan mati listrik                |
+
+---
+
+## 11. Rencana Pengujian (Testing Plan)
+
+### 11.1 Jenis Pengujian
+
+| Jenis Uji | Tujuan | Waktu Pelaksanaan |
+|---|---|---|
+| **Unit Testing** | Validasi fungsi kunci: hash NIK, generate OTP, hitung suara | Saat development |
+| **Integration Testing** | Alur lengkap dari verifikasi KTP → submit suara → tampil di hasil | Saat development |
+| **User Acceptance Testing (UAT)** | Panitia & petugas TPS mencoba sistem sesuai skenario nyata | H-3 sebelum pemilihan |
+| **Simulasi Pemilihan** | Dry run penuh dengan data dummy, libatkan beberapa warga sukarela | H-1 sebelum pemilihan |
+| **Penetration Test Dasar** | Coba akses halaman tanpa OTP, coba submit dua kali, coba SQL injection sederhana | H-3 sebelum pemilihan |
+
+### 11.2 Skenario Uji Kritis
+
+```
+Skenario 1: Cegah Double Voting
+  → Pemilih A selesai voting
+  → Coba verifikasi NIK yang sama kembali
+  → Ekspektasi: sistem menolak dengan pesan "sudah memilih"
+
+Skenario 2: OTP Kadaluarsa
+  → Generate OTP untuk pemilih B
+  → Tunggu 11 menit tanpa digunakan
+  → Coba input OTP tersebut
+  → Ekspektasi: sistem menolak dengan pesan "kode tidak valid"
+
+Skenario 3: Isolasi Peran
+  → Login sebagai petugas TPS
+  → Coba akses URL halaman hasil/dashboard admin
+  → Ekspektasi: akses ditolak / redirect ke halaman tidak diizinkan
+
+Skenario 4: Verifikasi Token Bukti
+  → Pemilih C selesai voting, dapat token #B3K-5512
+  → Masukkan token di halaman verifikasi publik
+  → Ekspektasi: tampil status "Suara tercatat" tanpa info pilihan
+
+Skenario 5: Simulasi Server Restart
+  → Matikan dan nyalakan ulang server saat 50% pemilih sudah voting
+  → Ekspektasi: semua data suara tetap ada, dashboard kembali normal
+```
+
+### 11.3 Kriteria Go/No-Go Sebelum Hari-H
+
+Sistem **tidak boleh digunakan** jika salah satu kondisi berikut terjadi saat simulasi:
+
+- [ ] Double voting berhasil dilakukan
+- [ ] OTP bisa digunakan lebih dari satu kali
+- [ ] Petugas TPS bisa mengakses halaman hasil
+- [ ] Suara hilang setelah server restart
+- [ ] Dashboard hasil tidak muncul setelah 5 detik
+
+---
+
+## 12. Jadwal Implementasi (Timeline)
+
+| Fase | Kegiatan | Durasi Estimasi |
+|---|---|---|
+| **Fase 1 — Perancangan** | Finalisasi dokumen ANSI, desain database, wireframe UI | 2 minggu |
+| **Fase 2 — Development** | Bangun aplikasi web, implementasi keamanan, unit testing | 4–6 minggu |
+| **Fase 3 — Testing** | Integration test, UAT bersama panitia, penetration test | 2 minggu |
+| **Fase 4 — Pelatihan** | Pelatihan petugas TPS, simulasi pemilihan, sosialisasi warga | 1 minggu |
+| **Fase 5 — Pelaksanaan** | Hari pemilihan, monitoring real-time, backup berkala | 1 hari |
+| **Fase 6 — Evaluasi** | Laporan hasil, evaluasi sistem, rekomendasi perbaikan | 3–5 hari |
