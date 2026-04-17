@@ -1,111 +1,201 @@
-# Analisis & Rancangan Sistem E-Voting
+# Analisis & Rancangan Sistem Informasi E-Voting Tingkat Kelurahan
 
 ---
 
-## Definisi Sistem E-Voting
+## 1. Definisi Sistem
 
-**E-Voting** (Electronic Voting) adalah sistem pemungutan suara berbasis teknologi digital yang memungkinkan pemilih memberikan suara secara elektronik, di mana setiap suara dapat **diaudit** (auditable), **dilacak tanpa identitas** (anonymous), dan **hasil tidak dapat dimanipulasi** oleh pihak manapun — termasuk panitia pusat sendiri.
+**E-Voting Kelurahan** adalah sistem pemungutan suara elektronik berskala kelurahan/desa yang digunakan untuk pemilihan internal seperti **Ketua RT, Ketua RW, atau musyawarah kelurahan lainnya**. Sistem ini menggantikan proses coblos manual dengan aplikasi berbasis web yang dapat diakses melalui perangkat di TPS kelurahan.
 
-### Tiga Prinsip Inti
+### Ruang Lingkup
 
-| Prinsip          | Definisi                                        | Mekanisme                                  |
-| ---------------- | ----------------------------------------------- | ------------------------------------------ |
-| **Auditability** | Setiap suara bisa diverifikasi keabsahannya     | Kriptografi + blockchain log               |
-| **Anonymity**    | Identitas pemilih tidak bisa dikaitkan ke suara | Zero-knowledge proof / envelope encryption |
-| **Integrity**    | Hasil tidak bisa diubah siapapun                | Distributed ledger + hash chaining         |
+| Aspek               | Cakupan                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| **Skala**           | 1 kelurahan (200–2.000 pemilih)                             |
+| **Jenis Pemilihan** | Ketua RT, Ketua RW, Kepala Lingkungan, musyawarah kelurahan |
+| **Infrastruktur**   | Server lokal / cloud sederhana, jaringan LAN/WiFi kelurahan |
+| **Pengguna**        | Warga terdaftar di kelurahan bersangkutan                   |
+| **Platform**        | Aplikasi web responsif, diakses via tablet/laptop di TPS    |
 
----
+### Prinsip Dasar
 
-## Struktur Organisasi Sistem E-Voting
-
-![Struktur Organisasi Sistem E-Voting](assets/struktur_organisasi_evoting.svg)
-
-Hierarki organisasi terdiri dari 4 level utama:
-
-| Level                        | Entitas                   | Peran                                                                |
-| ---------------------------- | ------------------------- | -------------------------------------------------------------------- |
-| **0 — Kebijakan**            | KPU Pusat                 | Otoritas tertinggi, pembuat regulasi & kebijakan pemilu              |
-| **1 — Teknis & Pengawasan**  | Tim Teknis IT             | Kelola server, keamanan sistem, maintenance infrastruktur            |
-|                              | Panwaslu                  | Pengawas netral & independen, memastikan fairness proses             |
-|                              | Auditor Independen        | Verifikasi hasil & log blockchain, validasi integritas data          |
-| **2 — Operasional Lapangan** | KPU / KPPS Daerah         | Kelola TPS & autentikasi pemilih di tingkat daerah                   |
-|                              | Petugas TPS               | Verifikasi identitas pemilih secara langsung di TPS                  |
-| **3 — Pengguna Akhir**       | Pemilih (Warga Terdaftar) | Autentikasi biometrik / e-KTP → pilih kandidat → terima token anonim |
-| **Pendukung**                | Infrastruktur             | Server, jaringan, dan blockchain node                                |
+| Prinsip          | Penerapan di Tingkat Kelurahan                                   |
+| ---------------- | ---------------------------------------------------------------- |
+| **Keabsahan**    | Hanya warga terdaftar (sesuai data kelurahan) yang bisa memilih  |
+| **Satu Suara**   | Sistem mencegah pemilih memberikan suara lebih dari satu kali    |
+| **Kerahasiaan**  | Pilihan tidak dapat dikaitkan ke identitas pemilih               |
+| **Transparansi** | Hasil dapat diverifikasi oleh saksi dan panitia secara real-time |
 
 ---
 
-## Alur Bisnis: Sistem Lama (Manual)
+## 2. Struktur Organisasi
 
-Berikut adalah proses bisnis sistem pemungutan suara **manual** yang selama ini berjalan, beserta kelemahannya — yang menjadi dasar alasan adopsi e-voting.
+![Struktur Organisasi E-Voting Kelurahan](assets/struktur_organisasi_evoting.svg)
 
-![Alur Bisnis Sistem Voting Manual](assets/alur_sistem_lama_manual.svg)
+```
+                    ┌─────────────────┐
+                    │  Lurah / Kades  │  ← Penanggung jawab utama
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+     ┌────────────┐  ┌─────────────┐  ┌──────────┐
+     │  Panitia   │  │  Operator   │  │  Saksi   │
+     │  Pemilihan │  │  Sistem     │  │  (per    │
+     │  Kelurahan │  │  (Admin IT) │  │  kandidat)│
+     └─────┬──────┘  └─────────────┘  └──────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │  Petugas TPS     │  ← Verifikasi identitas warga
+  │  (per RT/RW)     │
+  └────────┬─────────┘
+           │
+           ▼
+  ┌──────────────────┐
+  │  Pemilih         │  ← Warga kelurahan terdaftar
+  │  (Warga)         │
+  └──────────────────┘
+```
 
-### Tahapan & Risiko Sistem Manual
+### Peran & Tanggung Jawab
 
-| No  | Tahap                    | Deskripsi                                  | Aktor     | Risiko                                          |
-| --- | ------------------------ | ------------------------------------------ | --------- | ----------------------------------------------- |
-| 1   | Registrasi DPT           | Data pemilih disusun manual oleh kelurahan | Pemda     | 🔴 Data ganda, pemilih fiktif                   |
-| 2   | Distribusi surat suara   | Dicetak & dikirim ke TPS secara fisik      | Logistik  | 🔴 Surat hilang, rusak, dicuri                  |
-| 3   | Verifikasi identitas     | Cocokkan KTP dengan buku DPT manual        | KPPS      | 🔴 KTP palsu, coblos lebih dari sekali          |
-| 4   | Pemberian suara (coblos) | Pemilih coblos kertas di bilik suara       | Pemilih   | 🟡 Relatif aman tapi lambat & boros kertas      |
-| 5   | Penghitungan suara       | Dihitung manual di TPS oleh KPPS           | KPPS      | 🔴 Salah hitung, manipulasi C1                  |
-| 6   | Rekapitulasi berjenjang  | TPS → Kecamatan → Kabupaten → Pusat        | KPU       | 🔴 **TERBESAR**: angka diubah di tiap level     |
-| 7   | Pengumuman hasil         | Ditetapkan oleh KPU Pusat                  | KPU Pusat | Sering diperdebatkan karena kurang transparansi |
+| Peran                          | Tanggung Jawab                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| **Lurah / Kepala Desa**        | Penanggung jawab kegiatan, mengesahkan hasil pemilihan                         |
+| **Panitia Pemilihan**          | Menyusun DPT, menetapkan jadwal, mengkoordinasi TPS, mengumumkan hasil         |
+| **Operator Sistem (Admin IT)** | Setup perangkat & jaringan, mengelola akun pemilih, troubleshoot teknis        |
+| **Saksi Kandidat**             | Mengawasi jalannya pemilihan, memverifikasi hasil akhir                        |
+| **Petugas TPS**                | Memverifikasi identitas pemilih (KTP/KK), memberikan akses ke perangkat voting |
+| **Pemilih**                    | Warga terdaftar dalam DPT kelurahan, memberikan suara via perangkat            |
 
 ---
 
-## Asumsi Sistem Lama (Pain Points yang Mendorong Adopsi E-Voting)
+## 3. Alur Bisnis: Sistem Lama (Manual)
 
-Berikut adalah perbandingan kondisi sistem lama yang menjadi **justifikasi adopsi** e-voting beserta solusi yang ditawarkan:
+![Alur Sistem Lama Manual](assets/alur_sistem_lama_manual.svg)
 
-### Kelemahan Sistem Lama vs Solusi E-Voting
+### Tahapan Proses Manual di Kelurahan
 
-| Aspek               | 🔴 Sistem Lama                                                                                         | ✅ Solusi E-Voting                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Data Pemilih**    | DPT tidak real-time — bisa kadaluarsa, ganda, atau fiktif. Tidak ada sinkronisasi dengan Dukcapil      | DPT digital terenkripsi — sinkronisasi real-time dengan database Dukcapil. Setiap pemilih mendapat token unik satu kali pakai |
-| **Distribusi**      | Rantai pengiriman tidak aman — surat suara rawan hilang atau disalahgunakan selama distribusi fisik    | Tidak ada distribusi fisik — suara diberikan melalui perangkat aman di TPS                                                    |
-| **Penghitungan**    | Human error — salah hitung, surat rusak/tidak sah, keputusan subyektif petugas TPS                     | Penghitungan otomatis & akurat — instan tanpa intervensi manusia                                                              |
-| **Integritas Data** | Rekapitulasi berjenjang rentan — setiap perpindahan data bisa dimanipulasi oleh oknum di level manapun | Blockchain immutable — setiap suara dicatat ke blockchain, tidak ada pihak tunggal yang bisa mengubah data                    |
-| **Jejak Audit**     | Tidak ada jejak audit digital — sulit membuktikan kecurangan tanpa rekaman elektronik                  | Audit trail lengkap — setiap pemilih bisa verifikasi suaranya masuk via token anonim                                          |
-| **Biaya**           | Biaya dan waktu sangat besar — cetak surat, logistik, petugas TPS berulang tiap pemilu                 | Efisiensi biaya jangka panjang — investasi awal besar, biaya operasional per pemilu jauh lebih rendah                         |
+| No  | Tahap                     | Proses                                                          | Kelemahan                                                |
+| --- | ------------------------- | --------------------------------------------------------------- | -------------------------------------------------------- |
+| 1   | Pendataan pemilih         | RT/RW mengumpulkan data warga secara manual dari pintu ke pintu | Data tidak akurat, warga pindah tidak terdata, duplikasi |
+| 2   | Pembuatan surat suara     | Panitia mencetak kertas suara sesuai jumlah DPT                 | Biaya cetak, risiko kelebihan/kekurangan surat           |
+| 3   | Pelaksanaan di TPS        | Warga datang → cek KTP → terima surat → coblos di bilik         | Antrian panjang, proses lambat, warga malas datang       |
+| 4   | Penghitungan suara        | Panitia buka kotak suara → hitung manual satu per satu          | Salah hitung, surat tidak sah diperdebatkan              |
+| 5   | Rekapitulasi & pengumuman | Ditulis di papan, diumumkan lisan                               | Tidak ada rekam jejak digital, sulit diaudit ulang       |
+
+### Masalah Utama Sistem Manual
+
+- **Partisipasi rendah** — Warga malas antri, terutama usia muda
+- **Waktu lama** — Proses 1 hari penuh untuk 1 RT/RW
+- **Biaya operasional** — Cetak surat, konsumsi panitia, sewa tempat
+- **Tidak ada audit trail** — Jika ada sengketa, harus hitung ulang fisik
+- **Rentan kecurangan** — Surat suara bisa ditambah/dikurangi saat penghitungan
+
+---
+
+## 4. Pain Points & Justifikasi Adopsi E-Voting
+
+### Perbandingan Sistem Lama vs E-Voting Kelurahan
+
+| Aspek                   | 🔴 Sistem Lama (Manual)                          | ✅ E-Voting Kelurahan                                      |
+| ----------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| **Pendataan**           | Kumpul data manual door-to-door, rawan duplikasi | Import dari data kependudukan kelurahan, validasi otomatis |
+| **Pelaksanaan**         | Antri lama, coblos kertas, bilik fisik           | Akses tablet di TPS, voting digital 1–2 menit              |
+| **Penghitungan**        | Hitung manual berjam-jam, rawan salah            | Otomatis real-time, hasil langsung tampil                  |
+| **Rekam Jejak**         | Tidak ada — hanya catatan kertas                 | Log digital lengkap, bisa diaudit kapan saja               |
+| **Biaya per Pemilihan** | Rp 2–5 juta (cetak, konsumsi, logistik)          | Rp 500rb–1 juta (listrik, internet) setelah setup awal     |
+| **Partisipasi**         | Rendah (40–60%) karena antri & ribet             | Lebih tinggi karena proses cepat & modern                  |
 
 ### Asumsi Dasar Sebelum Adopsi
 
-| Aspek                | Asumsi                                                                                             |
-| -------------------- | -------------------------------------------------------------------------------------------------- |
-| **Infrastruktur**    | Jaringan internet atau intranet tersedia di seluruh TPS, minimal untuk pengiriman data terenkripsi |
-| **Regulasi**         | Ada payung hukum yang mengakui keabsahan suara elektronik dan tanda tangan digital dalam pemilu    |
-| **Literasi Digital** | Pemilih cukup melek teknologi untuk menggunakan perangkat sentuh atau antarmuka sederhana          |
+| Aspek                | Asumsi yang Harus Terpenuhi                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| **Infrastruktur**    | Kantor kelurahan memiliki akses listrik stabil & internet/WiFi minimal |
+| **Perangkat**        | Tersedia minimal 2–3 tablet/laptop untuk TPS                           |
+| **SDM**              | Ada 1 orang yang bisa mengoperasikan sistem (dilatih singkat)          |
+| **Regulasi**         | Lurah/Kades menyetujui penggunaan e-voting untuk pemilihan internal    |
+| **Penerimaan Warga** | Sosialisasi dilakukan agar warga percaya pada sistem digital           |
 
 ---
 
-## Alur Bisnis Sistem E-Voting (Usulan)
+## 5. Alur Bisnis Sistem E-Voting Kelurahan (Usulan)
 
 ![Alur Sistem E-Voting](assets/alur_sistem_evoting.svg)
 
-### Tahapan & Solusi Sistem E-Voting
+### Tahapan Proses E-Voting
 
-| No  | Tahap                      | Deskripsi                                           | Solusi yang Ditawarkan                     |
-| --- | -------------------------- | --------------------------------------------------- | ------------------------------------------ |
-| 1   | Autentikasi pemilih        | e-KTP scan + biometrik → validasi DPT digital       | ✅ Satu pemilih satu identitas unik        |
-| 2   | Penerbitan token anonim    | Sistem buat token acak → tidak terkait identitas    | ✅ Anonimitas terjamin secara kriptografis |
-| 3   | Pemilih memilih kandidat   | Antarmuka layar sentuh → konfirmasi pilihan         | Interaksi langsung, user-friendly          |
-| 4   | Enkripsi suara             | Suara dienkripsi end-to-end sebelum dikirim         | ✅ Tidak ada yang bisa membaca isi suara   |
-| 5   | Pencatatan ke blockchain   | Suara masuk ledger terdistribusi → immutable        | ✅ Tidak ada pihak tunggal bisa manipulasi |
-| 6   | Penghitungan otomatis      | Hasil langsung tersedia setelah TPS tutup           | Eliminasi human error & percepatan hasil   |
-| 7   | Verifikasi mandiri pemilih | Cek token di portal publik → konfirmasi suara masuk | ✅ Auditability tanpa buka identitas       |
+| No  | Tahap                     | Proses                                                                           | Keterangan                                    |
+| --- | ------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------- |
+| 1   | **Persiapan**             | Admin import data warga dari database kelurahan ke sistem → generate DPT digital | Dilakukan H-7 sebelum pemilihan               |
+| 2   | **Registrasi kandidat**   | Panitia input data kandidat (nama, foto, visi-misi) ke sistem                    | Data ditampilkan di halaman voting            |
+| 3   | **Verifikasi pemilih**    | Warga datang ke TPS → petugas scan/cek KTP → sistem validasi di DPT              | Warga yang sudah memilih otomatis ditandai    |
+| 4   | **Pemberian suara**       | Pemilih akses halaman voting → pilih kandidat → konfirmasi → submit              | Token unik dicetak/ditampilkan sebagai bukti  |
+| 5   | **Penghitungan otomatis** | Sistem hitung agregat suara secara real-time                                     | Hasil bisa dipantau live oleh panitia & saksi |
+| 6   | **Pengumuman hasil**      | Setelah TPS tutup, hasil final ditampilkan di dashboard publik                   | Saksi memverifikasi, Lurah mengesahkan        |
+
+### Diagram Alur Sederhana
+
+```
+Warga datang ke TPS
+       │
+       ▼
+┌──────────────┐     ┌─────────────────┐
+│ Petugas cek  │────▶│ Sistem validasi │
+│ KTP warga    │     │ di DPT digital  │
+└──────────────┘     └───────┬─────────┘
+                             │
+                    ┌────────┴────────┐
+                    │                 │
+                 VALID            TIDAK VALID
+                    │                 │
+                    ▼                 ▼
+           ┌──────────────┐   ┌──────────────┐
+           │ Buka halaman │   │ Ditolak,     │
+           │ voting di    │   │ data tidak   │
+           │ tablet       │   │ terdaftar    │
+           └──────┬───────┘   └──────────────┘
+                  │
+                  ▼
+           ┌──────────────┐
+           │ Pilih        │
+           │ kandidat     │
+           │ + konfirmasi │
+           └──────┬───────┘
+                  │
+                  ▼
+           ┌──────────────┐
+           │ Suara masuk  │
+           │ database     │
+           │ + token bukti│
+           └──────┬───────┘
+                  │
+                  ▼
+           ┌──────────────┐
+           │ Dashboard    │
+           │ hasil        │
+           │ real-time    │
+           └──────────────┘
+```
 
 ---
 
-## Ringkasan Analisis
+## 6. Ringkasan Analisis
 
-Dari analisis di atas, sistem e-voting yang ideal harus memenuhi empat lapisan desain:
+Sistem e-voting tingkat kelurahan yang ideal harus memenuhi tiga lapisan desain:
 
-**Lapisan Identitas** — Autentikasi pemilih menggunakan e-KTP dan biometrik, lalu memisahkan identitas dari suara menggunakan kriptografi kunci publik (zero-knowledge proof atau blind signature). Pemilih hanya bisa masuk satu kali, tapi siapapun tidak bisa menghubungkan suara ke identitasnya.
+**Lapisan Identitas** — Verifikasi pemilih menggunakan NIK/KTP yang dicocokkan dengan DPT digital kelurahan. Sistem memastikan setiap warga hanya bisa memilih satu kali melalui penandaan status di database.
 
-**Lapisan Suara** — Suara dienkripsi end-to-end di perangkat TPS sebelum dikirim ke server. Isi suara hanya bisa dibuka secara agregat melalui proses decryption threshold — artinya butuh mayoritas pemegang kunci (misalnya 3 dari 5 pihak independen) untuk membuka hasilnya, sehingga tidak ada satu pihak yang bisa curang sendiri.
+**Lapisan Suara** — Pilihan pemilih disimpan terpisah dari identitasnya di database. Setiap suara mendapat token unik yang bisa digunakan pemilih untuk mengonfirmasi bahwa suaranya tercatat, tanpa mengungkap isi pilihannya kepada orang lain.
 
-**Lapisan Integritas** — Blockchain permissioned (misalnya Hyperledger) mencatat setiap suara sebagai transaksi yang tidak bisa diubah. Node blockchain dikelola oleh beberapa institusi berbeda (KPU, Panwaslu, universitas independen, lembaga internasional) sehingga tidak ada entitas tunggal yang bisa memanipulasi.
+**Lapisan Audit** — Seluruh aktivitas tercatat dalam log sistem (waktu voting, jumlah pemilih, status DPT). Saksi kandidat dan panitia dapat memantau dashboard hasil secara real-time. Setelah pemilihan, rekap digital dapat dicetak sebagai dokumen resmi.
 
-**Lapisan Audit** — Setiap pemilih mendapat receipt token anonim yang bisa dicek di portal publik untuk memastikan suaranya tercatat. Auditor independen bisa memverifikasi total suara tanpa melihat isi individual suara.
+### Kebutuhan Sistem
+
+| Komponen          | Spesifikasi Minimum                                                |
+| ----------------- | ------------------------------------------------------------------ |
+| **Server**        | 1 unit laptop/PC sebagai server lokal atau cloud hosting sederhana |
+| **Perangkat TPS** | 2–3 tablet/laptop dengan browser modern                            |
+| **Jaringan**      | WiFi lokal (LAN) atau koneksi internet                             |
+| **Software**      | Aplikasi web (PHP/Node.js + MySQL/PostgreSQL)                      |
+| **Backup**        | Backup database otomatis setiap 30 menit selama pemilihan          |

@@ -1,82 +1,413 @@
-
-<h2 class="sr-only">Perbandingan asumsi sistem lama dengan solusi e-voting</h2>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:1rem 0">
-
-  <div style="background:var(--color-background-danger);border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-lg);padding:1rem 1.25rem">
-    <p style="font-size:13px;font-weight:500;color:var(--color-text-danger);margin:0 0 12px">Sistem lama — asumsi & kelemahan</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="border-left:2px solid var(--color-border-danger);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">DPT tidak real-time</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Data pemilih bisa kadaluarsa, ganda, atau fiktif. Tidak ada sinkronisasi otomatis dengan data Dukcapil.</p>
+<h2 class="sr-only">
+  Perbandingan Sistem Pemilihan Manual vs E-Voting Kelurahan
+</h2>
+<div
+  style="
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 1rem 0;
+  "
+>
+  <div
+    style="
+      background: var(--color-background-danger);
+      border: 0.5px solid var(--color-border-danger);
+      border-radius: var(--border-radius-lg);
+      padding: 1rem 1.25rem;
+    "
+  >
+    <p
+      style="
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-text-danger);
+        margin: 0 0 12px;
+      "
+    >
+      Sistem Manual — Kelemahan di Kelurahan
+    </p>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div
+        style="
+          border-left: 2px solid var(--color-border-danger);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Pendataan manual door-to-door
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          RT/RW mengumpulkan data warga secara manual. Data bisa duplikat, tidak
+          akurat, atau tidak mencakup warga pindahan baru.
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-danger);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Rantai pengiriman tidak aman</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Surat suara dicetak dalam jumlah besar, rawan hilang atau disalahgunakan selama distribusi fisik.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-danger);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Biaya cetak berulang
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Setiap pemilihan harus cetak surat suara baru. Biaya Rp 2-5 juta per
+          pemilihan untuk satu kelurahan.
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-danger);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Penghitungan error manusia</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Salah hitung, surat rusak/tidak sah, keputusan subyektif petugas TPS.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-danger);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Antrian panjang di TPS
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Proses verifikasi + coblos memakan ~5 menit per orang. Warga malas
+          antri, partisipasi rendah (40-60%).
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-danger);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Rekapitulasi berjenjang rentan</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Setiap perpindahan data (TPS → kecamatan → kabupaten) bisa dimanipulasi oleh oknum di level manapun.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-danger);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Penghitungan rawan error
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Hitung manual berjam-jam, surat tidak sah diperdebatkan, potensi salah
+          hitung oleh panitia.
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-danger);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Tidak ada jejak audit digital</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Sulit membuktikan kecurangan tanpa rekaman elektronik. Sengketa harus mengulang perhitungan fisik.</p>
-      </div>
-      <div style="border-left:2px solid var(--color-border-danger);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Biaya dan waktu sangat besar</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Cetak surat, logistik, petugas TPS — berulang tiap pemilu dengan biaya operasional tinggi.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-danger);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Tidak ada rekam jejak
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Jika ada sengketa, harus hitung ulang manual. Tidak ada bukti digital
+          yang bisa diaudit.
+        </p>
       </div>
     </div>
   </div>
 
-  <div style="background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);padding:1rem 1.25rem">
-    <p style="font-size:13px;font-weight:500;color:var(--color-text-success);margin:0 0 12px">E-voting — solusi yang ditawarkan</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="border-left:2px solid var(--color-border-success);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">DPT digital terenkripsi</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Sinkronisasi real-time dengan database Dukcapil. Setiap pemilih mendapat token unik satu kali pakai.</p>
+  <div
+    style="
+      background: var(--color-background-success);
+      border: 0.5px solid var(--color-border-success);
+      border-radius: var(--border-radius-lg);
+      padding: 1rem 1.25rem;
+    "
+  >
+    <p
+      style="
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--color-text-success);
+        margin: 0 0 12px;
+      "
+    >
+      E-Voting Kelurahan — Solusi yang Ditawarkan
+    </p>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div
+        style="
+          border-left: 2px solid var(--color-border-success);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          DPT digital dari data kelurahan
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Data warga diimport dari database kelurahan. Validasi otomatis
+          mencegah duplikasi dan data tidak valid.
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-success);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Tidak ada distribusi fisik</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Suara diberikan melalui perangkat aman di TPS. Tidak ada surat yang bisa hilang atau dicuri.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-success);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Tanpa biaya cetak
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Voting dilakukan di tablet/laptop. Biaya operasional hanya Rp
+          500rb-1jt (listrik & internet).
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-success);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Penghitungan otomatis & akurat</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Sistem menghitung secara instan tanpa intervensi manusia. Tidak ada surat rusak atau sengketa subjektif.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-success);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Proses cepat ~2 menit
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Verifikasi KTP + voting digital selesai dalam 1-2 menit. Partisipasi
+          meningkat karena proses ringkas.
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-success);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Blockchain immutable</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Setiap suara dicatat ke blockchain. Tidak ada pihak tunggal yang bisa mengubah data hasil.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-success);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Penghitungan otomatis & instan
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Hasil langsung tersedia di dashboard. Tidak ada surat tidak sah, tidak
+          ada salah hitung.
+        </p>
       </div>
-      <div style="border-left:2px solid var(--color-border-success);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Audit trail lengkap</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Setiap pemilih bisa memverifikasi suaranya masuk via token anonim, tanpa membuka identitasnya.</p>
-      </div>
-      <div style="border-left:2px solid var(--color-border-success);padding-left:10px">
-        <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0">Efisiensi biaya jangka panjang</p>
-        <p style="font-size:12px;color:var(--color-text-secondary);margin:4px 0 0">Investasi awal besar, tapi biaya operasional per pemilu jauh lebih rendah dari sistem cetak.</p>
+      <div
+        style="
+          border-left: 2px solid var(--color-border-success);
+          padding-left: 10px;
+        "
+      >
+        <p
+          style="
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+            margin: 0;
+          "
+        >
+          Audit trail digital lengkap
+        </p>
+        <p
+          style="
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            margin: 4px 0 0;
+          "
+        >
+          Seluruh aktivitas tercatat di log sistem. Rekap bisa dicetak sebagai
+          dokumen resmi untuk arsip kelurahan.
+        </p>
       </div>
     </div>
   </div>
 </div>
 
-<div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-top:4px">
-  <p style="font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0 0 8px">Asumsi dasar sebelum adopsi e-voting</p>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px">
-      <p style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px">Infrastruktur</p>
-      <p style="font-size:12px;color:var(--color-text-secondary);margin:0">Jaringan internet atau intranet tersedia di seluruh TPS, minimal untuk pengiriman data terenkripsi</p>
+<div
+  style="
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.25rem;
+    margin-top: 4px;
+  "
+>
+  <p
+    style="
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      margin: 0 0 8px;
+    "
+  >
+    Asumsi dasar sebelum adopsi e-voting kelurahan
+  </p>
+  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px">
+    <div
+      style="
+        background: var(--color-background-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+      "
+    >
+      <p
+        style="
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--color-text-primary);
+          margin: 0 0 4px;
+        "
+      >
+        Perangkat
+      </p>
+      <p style="font-size: 12px; color: var(--color-text-secondary); margin: 0">
+        Tersedia minimal 2–3 tablet/laptop dan WiFi/LAN di kantor kelurahan
+        untuk TPS
+      </p>
     </div>
-    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px">
-      <p style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px">Regulasi</p>
-      <p style="font-size:12px;color:var(--color-text-secondary);margin:0">Ada payung hukum yang mengakui keabsahan suara elektronik dan tanda tangan digital dalam pemilu</p>
+    <div
+      style="
+        background: var(--color-background-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+      "
+    >
+      <p
+        style="
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--color-text-primary);
+          margin: 0 0 4px;
+        "
+      >
+        Persetujuan
+      </p>
+      <p style="font-size: 12px; color: var(--color-text-secondary); margin: 0">
+        Lurah/Kades menyetujui penggunaan e-voting dan warga sudah
+        disosialisasikan
+      </p>
     </div>
-    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px">
-      <p style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin:0 0 4px">Literasi digital</p>
-      <p style="font-size:12px;color:var(--color-text-secondary);margin:0">Pemilih cukup melek teknologi untuk menggunakan perangkat sentuh atau antarmuka sederhana</p>
+    <div
+      style="
+        background: var(--color-background-secondary);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+      "
+    >
+      <p
+        style="
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--color-text-primary);
+          margin: 0 0 4px;
+        "
+      >
+        Operator
+      </p>
+      <p style="font-size: 12px; color: var(--color-text-secondary); margin: 0">
+        Ada minimal 1 orang yang bisa mengoperasikan aplikasi web (dilatih
+        singkat ~2 jam)
+      </p>
     </div>
   </div>
 </div>
