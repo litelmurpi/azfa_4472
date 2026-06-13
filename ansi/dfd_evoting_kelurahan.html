@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFD - Sistem E-Voting Kelurahan</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #f3f4f6;
+            --container-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: var(--primary-bg);
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 20px 20px;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            width: 100%;
+            max-width: 1200px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #111827;
+        }
+
+        p.subtitle {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .controls {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+        }
+
+        button.print-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+        }
+
+        button.print-btn:hover { 
+            background-color: var(--accent-hover); 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.3);
+        }
+
+        .diagram-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            min-height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fafaf9;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .diagram-wrapper svg {
+            width: 100%;
+            max-width: 1000px;
+            height: auto;
+        }
+
+        /* SVG Overrides for clearer lines */
+        .edgePath .path { stroke-width: 2.5px !important; }
+        .edgeLabel { background-color: rgba(255,255,255,0.95) !important; padding: 2px 6px !important; border-radius: 4px; font-weight: 500; font-size: 13px; color: #334155; border: 1px solid #e2e8f0; }
+        .marker { fill: #475569 !important; stroke: #475569 !important; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; border: none; padding: 20px; max-width: 100%; page-break-after: always; }
+            .diagram-wrapper { border: none; background: white; padding: 0; }
+            .controls { display: none; }
+            @page { size: landscape; margin: 1cm; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DIAGRAM KONTEKS -->
+    <div class="container">
+        <div class="controls">
+            <button class="print-btn" onclick="window.print()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Cetak / Simpan
+            </button>
+        </div>
+        
+        <div class="header">
+            <h2>Diagram Konteks (Context Diagram)</h2>
+            <p class="subtitle">Sistem Informasi E-Voting Tingkat Kelurahan</p>
+        </div>
+
+        <div class="diagram-wrapper" id="diagram-konteks">
+            <span style="color:var(--text-muted);">Memuat Diagram Konteks...</span>
+        </div>
+    </div>
+
+    <!-- DFD LEVEL 0 -->
+    <div class="container">
+        <div class="header">
+            <h2>Data Flow Diagram (DFD) Level 0</h2>
+            <p class="subtitle">Dekomposisi Proses Sistem Informasi E-Voting Kelurahan</p>
+        </div>
+
+        <div class="diagram-wrapper" id="dfd-level-0">
+            <span style="color:var(--text-muted);">Memuat DFD Level 0...</span>
+        </div>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+        
+        await document.fonts.ready;
+        
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'base',
+            fontFamily: "'Inter', sans-serif",
+            themeVariables: {
+                lineColor: '#475569',
+                textColor: '#1e293b',
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'monotoneX', // Makes lines smoother and easier to follow horizontally
+                nodeSpacing: 70, // Increased spacing for clearer lines
+                rankSpacing: 80, // Increased vertical spacing
+            }
+        });
+
+        // Styling classes for elements
+        const classDefs = `
+    classDef entitas fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0c4a6e,font-weight:600,rx:8,ry:8;
+    classDef proses fill:#fef08a,stroke:#ca8a04,stroke-width:2.5px,color:#713f12,font-weight:700,shape:circle;
+    classDef datastore fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#1e293b,font-weight:600;
+    classDef sistem fill:#fef08a,stroke:#ca8a04,stroke-width:3px,color:#713f12,font-weight:800,shape:circle;
+        `;
+
+        const ctxDiagram = `flowchart LR
+    ${classDefs}
+
+    Lurah[Lurah / Kades]:::entitas
+    Admin[Admin IT]:::entitas
+    Panitia[Panitia Pemilihan]:::entitas
+    
+    Sistem((Sistem E-Voting \\nKelurahan)):::sistem
+
+    Petugas[Petugas TPS]:::entitas
+    Pemilih[Pemilih Warga]:::entitas
+    Saksi[Saksi Kandidat]:::entitas
+
+    Lurah -->|Buka/Tutup Sesi, Pengesahan| Sistem
+    Sistem -->|Hasil Final, Berita Acara| Lurah
+    
+    Admin -->|Data Warga, Data Kandidat, Backup| Sistem
+    Sistem -->|Status Import, Log Audit, Status Backup| Admin
+
+    Panitia -->|Registrasi Kandidat| Sistem
+    Sistem -->|DPT, Statistik, Hasil Final| Panitia
+
+    Petugas -->|NIK Pemilih| Sistem
+    Sistem -->|Status NIK, OTP| Petugas
+
+    Pemilih -->|OTP, Pilihan Kandidat| Sistem
+    Sistem -->|Surat Suara, Token Bukti| Pemilih
+
+    Sistem -->|Dashboard Real-time| Saksi`;
+
+        const dfd0Diagram = `flowchart TD
+    ${classDefs}
+
+    %% ENTITAS
+    Lurah[Lurah / Kades]:::entitas
+    Admin[Admin IT]:::entitas
+    Panitia[Panitia]:::entitas
+    Petugas[Petugas TPS]:::entitas
+    Pemilih[Pemilih]:::entitas
+    Saksi[Saksi]:::entitas
+
+    %% DATA STORES
+    D1[(D1 DPT_DIGITAL)]:::datastore
+    D2[(D2 KANDIDAT)]:::datastore
+    D4[(D4 OTP_TOKENS)]:::datastore
+    D5[(D5 SUARA_ANONIM)]:::datastore
+    D6[(D6 BERITA_ACARA)]:::datastore
+    D7[(D7 BACKUP_LOG)]:::datastore
+    D8[(D8 AUDIT_LOG)]:::datastore
+
+    %% PROSES
+    P1((1.0\\nManajemen\\nDPT)):::proses
+    P2((2.0\\nManajemen\\nKandidat)):::proses
+    P3((3.0\\nVerifikasi &\\nAutentikasi)):::proses
+    P4((4.0\\nPemungutan\\nSuara)):::proses
+    P5((5.0\\nRekapitulasi\\nHasil)):::proses
+    P6((6.0\\nPengesahan &\\nPelaporan)):::proses
+    P7((7.0\\nBackup &\\nAudit)):::proses
+
+    %% ALIRAN DATA
+    Admin -->|Data Warga| P1
+    P1 -->|Data Valid| D1
+    P1 -->|Status| Admin
+    P1 -->|DPT| Panitia
+
+    Panitia -->|Registrasi| P2
+    P2 -->|Profil| D2
+
+    Petugas -->|NIK| P3
+    P3 -->|Cek NIK| D1
+    P3 -->|Hash OTP| D4
+    P3 -->|Status NIK & OTP| Petugas
+    Pemilih -->|OTP| P3
+
+    P3 -->|Otorisasi Akses| P4
+    D2 -->|Daftar Kandidat| P4
+    Pemilih -->|Pilihan| P4
+    P4 -->|Suara Terenkripsi| D5
+    P4 -->|Token Bukti| Pemilih
+    P4 -->|Update Status| D1
+
+    D5 -->|Data Suara| P5
+    D1 -->|Total DPT| P5
+    P5 -->|Dashboard| Saksi
+    P5 -->|Statistik| Panitia
+    P5 -->|Hasil Final| P6
+
+    Lurah -->|Konfirmasi Pengesahan| P6
+    P6 -->|Dokumen BA| D6
+    P6 -->|Berita Acara| Lurah
+    P6 -->|Hasil Publik| Panitia
+
+    Admin -->|Perintah Backup| P7
+    P7 -->|Riwayat Backup| D7
+    P7 -->|Log Aktivitas| D8
+    P7 -->|Status & Audit CSV| Admin`;
+
+        try {
+            const { svg: svgCtx } = await mermaid.render('svg-ctx', ctxDiagram);
+            document.getElementById('diagram-konteks').innerHTML = svgCtx;
+
+            const { svg: svgDfd0 } = await mermaid.render('svg-dfd0', dfd0Diagram);
+            document.getElementById('dfd-level-0').innerHTML = svgDfd0;
+        } catch (e) {
+            console.error("Mermaid rendering failed:", e);
+            document.querySelectorAll('.diagram-wrapper').forEach(el => {
+                el.innerHTML = '<span style="color:#ef4444;">Gagal memuat diagram. Cek konsol.</span>';
+            });
+        }
+    </script>
+</body>
+</html>
