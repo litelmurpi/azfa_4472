@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="id" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Voting Kelurahan | Kelompok 11 Barbarabar</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Premium Fonts -->
+  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500&f[]=plus-jakarta-sans@400,500,600,700&display=swap" rel="stylesheet">
+  
+  <!-- GSAP, ScrollTrigger, & ScrollToPlugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+  
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <style>
+    :root {
+      --bg-deep: #030303;
+      --bg-surface: #0a0a0a;
+      --accent: #ffffff;
+    }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-deep);
+      color: #f8fafc;
+      overflow-x: hidden;
+      cursor: none; /* Hide default cursor for custom cursor */
+    }
+    
+    h1, h2, h3, h4, h5, .font-display {
+      font-family: 'Cabinet Grotesk', sans-serif;
+    }
+    
+    /* Custom Cursor */
+    #cursor-dot, #cursor-outline {
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 99999;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #cursor-dot {
+      width: 8px; height: 8px;
+      background: white;
+    }
+    #cursor-outline {
+      width: 40px; height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s;
+    }
+    
+    /* Magnetic Button Hover Physics */
+    .magnetic {
+      display: inline-flex;
+    }
+    
+    /* Double-Bezel Architecture */
+    .bezel-outer {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 2rem;
+      padding: 0.5rem;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+      transition: transform 0.7s cubic-bezier(0.32,0.72,0,1);
+    }
+    .bezel-outer:hover {
+      transform: scale(0.99);
+    }
+    
+    .bezel-inner {
+      background: var(--bg-surface);
+      border-radius: calc(2rem - 0.5rem);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Radial Glow Micro-interaction on Cards */
+    .bezel-inner::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.06), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .bezel-inner:hover::before {
+      opacity: 1;
+    }
+    .content-z {
+      position: relative;
+      z-index: 10;
+    }
+    
+    /* Noise Texture */
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+      opacity: 0.03;
+    }
+
+    ::-webkit-scrollbar { display: none; }
+    
+    .slide-panel {
+      width: 100vw;
+      height: 100dvh;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem 2rem 2rem 2rem;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-white/20">
+
+  <!-- Custom Cursor Elements -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-outline"></div>
+
+  <div class="noise-overlay"></div>
+
+  <!-- FLOATING GLASS NAV -->
+  <nav class="fixed left-1/2 top-8 z-40 flex -translate-x-1/2 items-center gap-6 md:gap-10 rounded-full bg-black/40 px-6 md:px-10 py-4 backdrop-blur-2xl ring-1 ring-white/10 hover-scale transition-all duration-300">
+    <span class="font-display text-xl font-bold tracking-tight text-white magnetic-text cursor-pointer" onclick="scrollToSlide('slide-hero')">Barbarabar.</span>
+    <div class="hidden md:block h-1.5 w-1.5 rounded-full bg-white/20"></div>
+    <div class="relative hidden md:flex gap-2 items-center">
+      <!-- Sliding Background Pill -->
+      <div id="nav-pill" class="absolute top-0 bottom-0 left-0 bg-white/10 rounded-full pointer-events-none opacity-0" style="width: 0px;"></div>
+      
+      <span data-target="slide-konsep" class="nav-item text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer px-4 py-2 rounded-full relative z-10">Konsep</span>
+      <span data-target="slide-pieces" class="nav-item text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer px-4 py-2 rounded-full relative z-10">PIECES</span>
+      <span data-target="slide-keamanan" class="nav-item text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer px-4 py-2 rounded-full relative z-10">Keamanan</span>
+      <span data-target="slide-teknis" class="nav-item text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer px-4 py-2 rounded-full relative z-10">Teknis</span>
+    </div>
+    <!-- Progress Line Indicator -->
+    <div class="absolute bottom-0 left-6 right-6 h-[2px] bg-white/5 overflow-hidden rounded-full">
+      <div id="nav-progress" class="h-full w-0 bg-white/40 rounded-full"></div>
+    </div>
+  </nav>
+
+  <!-- GSAP HORIZONTAL PAN WRAPPER -->
+  <main id="pan-wrapper" class="relative overflow-hidden w-full max-w-full z-20">
+    <div id="pan-track" class="flex h-[100dvh] items-center w-max">
+      
+      <!-- SLIDE 1: ATTENTION (Hero) -->
+      <section id="slide-hero" class="slide-panel items-center justify-center">
+        <div class="max-w-6xl text-center w-full px-4">
+          <h1 class="hero-text font-display text-6xl md:text-8xl lg:text-[7rem] font-extrabold tracking-tighter text-white leading-[1.05] mb-8">
+            Mendigitalisasi <br> Demokrasi Kelurahan.
+          </h1>
+          <p class="hero-text mx-auto max-w-[55ch] text-lg text-white/50 mb-14 leading-relaxed font-medium">
+            Sistem Informasi E-Voting yang aman, transparan, dan aksesibel. Menggantikan proses manual dengan arsitektur keamanan berlapis dan akurasi matematis absolut.
+          </p>
+          <div class="hero-text flex justify-center gap-6">
+            <div class="magnetic">
+              <button class="group relative flex items-center gap-5 rounded-full bg-white px-8 py-4 text-sm font-bold text-black transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-[0.98]">
+                Mulai Eksplorasi
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-black/10 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1 group-hover:-translate-y-[1px] group-hover:scale-105">
+                  <i class="ph ph-arrow-right text-lg"></i>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: DEFINISI & IDENTITAS -->
+      <section id="slide-konsep" class="slide-panel items-center justify-center">
+        <div class="flex flex-col md:flex-row w-full max-w-7xl mx-auto gap-16 items-center">
+          <div class="w-full md:w-1/2">
+            <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white mb-6">Meredefinisi Pilkades.</h2>
+            <p class="reveal-elem text-white/60 text-lg leading-relaxed mb-8">
+              E-Voting Kelurahan mentransformasi pemilihan konvensional menjadi digital seutuhnya. Menjawab masalah rekapitulasi lambat, inefisiensi logistik, dan rentannya manipulasi suara manual dengan jaminan DPT digital yang tervalidasi.
+            </p>
+            <div class="reveal-elem flex flex-wrap gap-4">
+              <div class="bezel-outer w-fit"><div class="bezel-inner content-z px-5 py-2 text-sm text-emerald-400 font-bold bg-emerald-500/10">Paperless</div></div>
+              <div class="bezel-outer w-fit"><div class="bezel-inner content-z px-5 py-2 text-sm text-blue-400 font-bold bg-blue-500/10">Real-time</div></div>
+              <div class="bezel-outer w-fit"><div class="bezel-inner content-z px-5 py-2 text-sm text-rose-400 font-bold bg-rose-500/10">Secure</div></div>
+            </div>
+          </div>
+          <div class="reveal-elem w-full md:w-1/2 bezel-outer">
+             <div class="bezel-inner p-10 bg-[#0a0a0a]">
+                <div class="content-z">
+                  <h3 class="font-display text-2xl font-bold text-white mb-6 hover-glow-text transition-colors">Kelompok 11 — Barbarabar</h3>
+                  <ul class="space-y-4">
+                    <li class="flex justify-between border-b border-white/5 pb-3 group cursor-pointer"><span class="text-white/60 group-hover:text-white transition-colors">Yudistira Azfa Dani Wibowo</span><span class="text-white/80 font-mono">24.12.3274</span></li>
+                    <li class="flex justify-between border-b border-white/5 pb-3 group cursor-pointer"><span class="text-white/60 group-hover:text-white transition-colors">Muhammad Adam Siswantoro</span><span class="text-white/80 font-mono">24.12.3281</span></li>
+                    <li class="flex justify-between border-b border-white/5 pb-3 group cursor-pointer"><span class="text-white/60 group-hover:text-white transition-colors">Wasima Juhaina</span><span class="text-white/80 font-mono">24.12.3282</span></li>
+                    <li class="flex justify-between border-b border-white/5 pb-3 group cursor-pointer"><span class="text-white/60 group-hover:text-white transition-colors">Sherly Meisya Maharani</span><span class="text-white/80 font-mono">24.12.3301</span></li>
+                    <li class="flex justify-between group cursor-pointer"><span class="text-white/60 group-hover:text-white transition-colors">Evan Aubin Wibowo</span><span class="text-white/80 font-mono">24.12.3319</span></li>
+                  </ul>
+                </div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: PROBLEM VS SOLUSI (Bento Grid) -->
+      <section class="slide-panel items-center">
+        <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
+          <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white ml-2">Paradigma Baru.</h2>
+          
+          <div class="grid w-full grid-cols-1 md:grid-cols-12 grid-flow-dense gap-6">
+            <div class="reveal-elem col-span-1 md:col-span-8 md:row-span-2 bezel-outer">
+              <div class="bezel-inner h-full flex flex-col p-12 min-h-[400px]">
+                <img src="https://picsum.photos/seed/geometry/1200/800" class="parallax-bg absolute inset-[-10%] h-[120%] w-[120%] object-cover mix-blend-luminosity opacity-15" alt="" />
+                <div class="content-z mt-auto">
+                  <h3 class="font-display text-5xl md:text-7xl font-bold text-white mb-4">5 Hari</h3>
+                  <p class="text-white/60 max-w-md text-lg leading-relaxed">Waktu rekapitulasi manual yang rawan manipulasi. E-Voting mengubahnya menjadi hitungan detik secara real-time.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="reveal-elem col-span-1 md:col-span-4 md:row-span-1 bezel-outer">
+              <div class="bezel-inner h-full p-8 flex flex-col justify-end min-h-[190px]">
+                <div class="content-z">
+                  <h4 class="font-display text-3xl font-bold text-white">1,200+ Lembar</h4>
+                  <p class="text-white/50 text-sm mt-2 font-medium">Kertas suara dieliminasi. Logistik bersih 100% digital.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="reveal-elem col-span-1 md:col-span-4 md:row-span-1 bezel-outer">
+              <div class="bezel-inner h-full p-8 flex flex-col justify-end min-h-[190px]">
+                <div class="content-z">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
+                    <span class="text-emerald-500 text-xs font-bold tracking-widest uppercase">Live</span>
+                  </div>
+                  <h4 class="font-display text-3xl font-bold text-white">Real-Time</h4>
+                  <p class="text-white/50 text-sm mt-2 font-medium">Dashboard saksi di-update otomatis tiap 5 detik.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: WORKFLOW (3 Fase) -->
+      <section class="slide-panel items-center justify-center">
+        <div class="w-full max-w-7xl mx-auto flex flex-col gap-10">
+          <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white">Workflow Sistem.</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="reveal-elem bezel-outer">
+              <div class="bezel-inner p-10 h-full min-h-[360px] bg-[#0a0a0a]">
+                <div class="content-z">
+                  <span class="text-emerald-500 font-bold text-xs tracking-widest uppercase mb-4 block">Fase 1: H-7 s/d H-1</span>
+                  <h3 class="font-display text-4xl font-bold text-white mb-6">Persiapan</h3>
+                  <ul class="space-y-4 text-white/60">
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-emerald-500 group-hover:scale-125 transition-transform"></i>Import DPT Digital (CSV)</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-emerald-500 group-hover:scale-125 transition-transform"></i>Registrasi Visi Misi Kandidat</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-emerald-500 group-hover:scale-125 transition-transform"></i>Setup Mini PC Server Lokal</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="reveal-elem bezel-outer" style="transition-delay: 100ms;">
+              <div class="bezel-inner p-10 h-full min-h-[360px] bg-white/5 border border-white/5">
+                <div class="content-z">
+                  <span class="text-rose-500 font-bold text-xs tracking-widest uppercase mb-4 block">Fase 2: Hari H</span>
+                  <h3 class="font-display text-4xl font-bold text-white mb-6">Pelaksanaan</h3>
+                  <ul class="space-y-4 text-white/60">
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-rose-500 group-hover:scale-125 transition-transform"></i>Verifikasi KTP & NIK Pemilih</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-rose-500 group-hover:scale-125 transition-transform"></i>Generate OTP 6-Digit (Bcrypt)</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-rose-500 group-hover:scale-125 transition-transform"></i>Pencoblosan & Cetak Token</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-rose-500 group-hover:scale-125 transition-transform"></i>Monitoring Dashboard Real-Time</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="reveal-elem bezel-outer" style="transition-delay: 200ms;">
+              <div class="bezel-inner p-10 h-full min-h-[360px] bg-[#0a0a0a]">
+                <div class="content-z">
+                  <span class="text-blue-500 font-bold text-xs tracking-widest uppercase mb-4 block">Fase 3: Pasca Acara</span>
+                  <h3 class="font-display text-4xl font-bold text-white mb-6">Penutupan</h3>
+                  <ul class="space-y-4 text-white/60">
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-blue-500 group-hover:scale-125 transition-transform"></i>Lurah Kunci Sesi Pemilihan</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-blue-500 group-hover:scale-125 transition-transform"></i>Persetujuan Digital Saksi</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-blue-500 group-hover:scale-125 transition-transform"></i>Cetak Berita Acara (PDF)</li>
+                    <li class="flex gap-3 group cursor-pointer"><i class="ph-light ph-check-circle mt-1 text-blue-500 group-hover:scale-125 transition-transform"></i>Backup DB (USB & Cloud)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: PIECES ANALYSIS -->
+      <section id="slide-pieces" class="slide-panel items-center justify-center">
+        <div class="w-full max-w-7xl mx-auto flex flex-col gap-8">
+          <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white">Analisis PIECES.</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-8">
+              <div class="content-z">
+                <h4 class="font-display text-2xl text-white font-bold mb-3">Performance</h4>
+                <p class="text-white/50 text-sm leading-relaxed">Proses dari verifikasi NIK, cetak OTP, hingga cetak token bukti selesai dalam ~2 menit/pemilih.</p>
+              </div>
+            </div></div>
+            
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-8">
+              <div class="content-z">
+                <h4 class="font-display text-2xl text-white font-bold mb-3">Information</h4>
+                <p class="text-white/50 text-sm leading-relaxed">Transparansi penuh. Saksi memantau rekapitulasi data agregat secara live (polling 5 detik).</p>
+              </div>
+            </div></div>
+
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-8">
+              <div class="content-z">
+                <h4 class="font-display text-2xl text-white font-bold mb-3">Economy</h4>
+                <p class="text-white/50 text-sm leading-relaxed">Penghematan massif dengan menghilangkan biaya logistik cetak surat suara dan bilik berulang kali.</p>
+              </div>
+            </div></div>
+            
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-8 bg-white/5 border-t border-white/10">
+              <div class="content-z">
+                <h4 class="font-display text-2xl text-white font-bold mb-3">Control</h4>
+                <p class="text-white/50 text-sm leading-relaxed">RBAC (Role-Based Access) 5 Level. Audit log 'append-only' amankan seluruh aksi admin.</p>
+              </div>
+            </div></div>
+            
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-8">
+              <div class="content-z">
+                <h4 class="font-display text-2xl text-white font-bold mb-3">Efficiency</h4>
+                <p class="text-white/50 text-sm leading-relaxed">Akurasi komputasi instan menggantikan rekapitulasi manual berhari-hari di kelurahan.</p>
+              </div>
+            </div></div>
+            
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-8">
+              <div class="content-z">
+                <h4 class="font-display text-2xl text-white font-bold mb-3">Service</h4>
+                <p class="text-white/50 text-sm leading-relaxed">UI E-Voting didesain dengan kontras tinggi (Elderly-Friendly) agar mudah digunakan lansia.</p>
+              </div>
+            </div></div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: KEAMANAN BERLAPIS -->
+      <section id="slide-keamanan" class="slide-panel items-center justify-center">
+        <div class="flex flex-col md:flex-row w-full max-w-7xl mx-auto gap-16 md:gap-24 items-center">
+          <div class="w-full md:w-5/12">
+            <h2 class="reveal-elem font-display text-5xl md:text-7xl font-bold tracking-tighter leading-[1.05] text-white mb-10">
+              Empat Lapis <br> Pertahanan.
+            </h2>
+            <div class="space-y-8">
+              <div class="reveal-elem group flex gap-6 items-start transition-opacity hover:opacity-100 opacity-60">
+                <i class="ph-light ph-shield-check text-3xl text-emerald-400 mt-1 transition-transform group-hover:rotate-12"></i>
+                <div>
+                  <h4 class="font-bold text-white text-xl">Infrastruktur Terisolasi</h4>
+                  <p class="text-white/50 text-base mt-2 leading-relaxed">Jaringan LAN tertutup selama pemungutan suara. Mustahil diserang DDoS dari luar.</p>
+                </div>
+              </div>
+              <div class="reveal-elem group flex gap-6 items-start transition-opacity hover:opacity-100 opacity-60">
+                <i class="ph-light ph-key text-3xl text-emerald-400 mt-1 transition-transform group-hover:rotate-12"></i>
+                <div>
+                  <h4 class="font-bold text-white text-xl">Otentikasi Berlapis</h4>
+                  <p class="text-white/50 text-base mt-2 leading-relaxed">Verifikasi KTP fisik → Validasi NIK DPT → OTP 6-Digit hash (Bcrypt).</p>
+                </div>
+              </div>
+              <div class="reveal-elem group flex gap-6 items-start transition-opacity hover:opacity-100 opacity-60">
+                <i class="ph-light ph-ghost text-3xl text-emerald-400 mt-1 transition-transform group-hover:rotate-12"></i>
+                <div>
+                  <h4 class="font-bold text-white text-xl">Anonimitas Identitas</h4>
+                  <p class="text-white/50 text-base mt-2 leading-relaxed">Rekam suara diputus relasinya dari NIK pemilih ditambah jeda waktu acak.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="reveal-elem w-full md:w-7/12 bezel-outer">
+            <div class="bezel-inner aspect-[4/3] p-12 flex items-center justify-center relative bg-[#0a0a0a] group">
+              <img src="security_lock.jpg" class="parallax-bg absolute inset-[-10%] w-[120%] h-[120%] object-cover mix-blend-luminosity opacity-40 filter contrast-125 transition-transform duration-1000 group-hover:scale-105" alt="Security" />
+              <div class="content-z relative w-full h-full border border-white/10 rounded-xl flex items-center justify-center backdrop-blur-md bg-black/40 transition-colors duration-700 group-hover:bg-black/20">
+                <i class="ph-light ph-lock-key text-[6rem] text-white/80 transition-transform duration-700 group-hover:scale-110"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: DATABASE & DFD -->
+      <section class="slide-panel items-center justify-center">
+        <div class="flex flex-col md:flex-row w-full max-w-7xl mx-auto gap-16 items-center">
+          <div class="w-full md:w-5/12">
+            <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white mb-6">Struktur Database.</h2>
+            <p class="reveal-elem text-white/60 mb-10 leading-relaxed">Sistem e-voting menggunakan arsitektur 8 tabel utama. Pemisahan entitas secara ketat memastikan tidak ada data suara yang bisa dilacak ke pemilih asli.</p>
+            
+            <div class="reveal-elem grid grid-cols-2 gap-4">
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">USERS</span></div>
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">DPT_DIGITAL</span></div>
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">KANDIDAT</span></div>
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">OTP_TOKENS</span></div>
+               <div class="border border-emerald-500/30 rounded-lg p-3 text-center bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:bg-emerald-500/20 transition-colors cursor-pointer"><span class="text-emerald-400 font-mono text-sm font-bold">SUARA_ANONIM</span></div>
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">BERITA_ACARA</span></div>
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">BACKUP_LOG</span></div>
+               <div class="border border-white/10 rounded-lg p-3 text-center bg-black/40 hover:bg-white/5 transition-colors cursor-pointer"><span class="text-white font-mono text-sm">AUDIT_LOG</span></div>
+            </div>
+          </div>
+          
+          <div class="reveal-elem w-full md:w-7/12 bezel-outer">
+             <div class="bezel-inner p-12 bg-[#0a0a0a] flex flex-col gap-10">
+                <div class="content-z border-l-[3px] border-emerald-500 pl-6 group">
+                  <h4 class="font-display text-2xl font-bold text-white mb-2 transition-colors group-hover:text-emerald-400">Isolasi Tabel Suara</h4>
+                  <p class="text-white/60 leading-relaxed">Tabel <code class="bg-white/10 px-1 rounded text-emerald-400 font-mono">SUARA_ANONIM</code> sengaja tidak memiliki Foreign Key ke identitas Pemilih. Disimpan dengan timestamp pembulatan ke menit (+ delay acak 2-10 detik) untuk mematikan potensi <i>Timing Attack</i>.</p>
+                </div>
+                <div class="content-z border-l-[3px] border-blue-500 pl-6 group">
+                  <h4 class="font-display text-2xl font-bold text-white mb-2 transition-colors group-hover:text-blue-400">DFD Level 0 (7 Proses Utama)</h4>
+                  <p class="text-white/60 leading-relaxed">Meliputi: (1) Manajemen DPT, (2) Manajemen Kandidat, (3) Verifikasi & OTP, (4) Pemungutan Suara, (5) Rekapitulasi, (6) Pengesahan Berita Acara, (7) Backup & Audit.</p>
+                </div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: KELAYAKAN FINANSIAL -->
+      <section class="slide-panel items-center justify-center">
+        <div class="w-full max-w-7xl mx-auto flex flex-col items-center gap-14 text-center">
+          <div class="max-w-3xl mx-auto">
+            <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white mb-6">Kelayakan Finansial.</h2>
+            <p class="reveal-elem text-lg text-white/50 leading-relaxed">Meski butuh biaya pengembangan (CAPEX) di awal, E-Voting menihilkan biaya logistik cetak suara rutin di tiap periode. Analisis membuktikan sistem ini sangat layak.</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-14 bg-[#0a0a0a] hover:-translate-y-2 transition-transform cursor-pointer">
+              <div class="content-z">
+                <span class="text-white/50 text-sm font-bold uppercase tracking-widest block mb-4">Payback Period</span>
+                <h3 class="font-display text-6xl font-bold text-white mb-2 counter-elem">1.83</h3>
+                <span class="text-white/50">Tahun</span>
+              </div>
+            </div></div>
+
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-14 bg-[#050505] shadow-[inset_0_0_40px_rgba(16,185,129,0.05)] border border-emerald-500/20 hover:-translate-y-2 transition-transform cursor-pointer">
+              <div class="content-z">
+                <span class="text-white/50 text-sm font-bold uppercase tracking-widest block mb-4">Net Present Value</span>
+                <h3 class="font-display text-5xl font-bold text-emerald-400 mt-2 mb-3">Rp 1.55<span class="text-3xl">M</span></h3>
+                <span class="text-emerald-500/70 font-medium">> 0 (Sangat Layak)</span>
+              </div>
+            </div></div>
+
+            <div class="reveal-elem bezel-outer"><div class="bezel-inner p-14 bg-[#0a0a0a] hover:-translate-y-2 transition-transform cursor-pointer">
+              <div class="content-z">
+                <span class="text-white/50 text-sm font-bold uppercase tracking-widest block mb-4">Return on Inv.</span>
+                <h3 class="font-display text-6xl font-bold text-white mb-2">18.5<span class="text-4xl text-white/50">%</span></h3>
+                <span class="text-white/50">Keuntungan Bersih</span>
+              </div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: ARSITEKTUR TEKNOLOGI -->
+      <section id="slide-teknis" class="slide-panel items-center justify-center">
+        <div class="flex flex-col md:flex-row w-full max-w-7xl mx-auto gap-16 items-center">
+          <div class="reveal-elem w-full md:w-6/12 bezel-outer group cursor-pointer">
+             <div class="bezel-inner p-2 bg-[#0a0a0a] overflow-hidden">
+                <img src="tech_stack.jpg" alt="Arsitektur E-Voting" class="w-full h-auto rounded-[calc(2rem-0.7rem)] filter contrast-125 mix-blend-luminosity opacity-80 transition-transform duration-1000 group-hover:scale-110" />
+             </div>
+          </div>
+          
+          <div class="w-full md:w-6/12 px-4">
+            <h2 class="reveal-elem font-display text-5xl font-bold tracking-tighter text-white mb-10">Tech Stack Modern.</h2>
+            
+            <div class="space-y-6">
+              <div class="reveal-elem flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 group">
+                 <span class="text-white/80 font-bold mb-1 sm:mb-0 transition-colors group-hover:text-emerald-400">Framework Backend</span>
+                 <span class="text-white/50 font-mono bg-white/5 px-3 py-1 rounded transition-colors group-hover:bg-emerald-500/10 group-hover:text-emerald-400">Laravel 10 (PHP 8.2)</span>
+              </div>
+              <div class="reveal-elem flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 group">
+                 <span class="text-white/80 font-bold mb-1 sm:mb-0 transition-colors group-hover:text-blue-400">Database Inti</span>
+                 <span class="text-white/50 font-mono bg-white/5 px-3 py-1 rounded transition-colors group-hover:bg-blue-500/10 group-hover:text-blue-400">MySQL 8.0</span>
+              </div>
+              <div class="reveal-elem flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 group">
+                 <span class="text-white/80 font-bold mb-1 sm:mb-0 transition-colors group-hover:text-purple-400">Frontend UI</span>
+                 <span class="text-white/50 font-mono bg-white/5 px-3 py-1 rounded transition-colors group-hover:bg-purple-500/10 group-hover:text-purple-400">Bootstrap 5 + Vanilla JS</span>
+              </div>
+              <div class="reveal-elem flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-white/10 pb-4 group">
+                 <span class="text-white/80 font-bold mb-1 sm:mb-0 transition-colors group-hover:text-rose-400">Web Server TPS</span>
+                 <span class="text-white/50 font-mono bg-white/5 px-3 py-1 rounded transition-colors group-hover:bg-rose-500/10 group-hover:text-rose-400">Nginx Lokal (Mini PC NUC)</span>
+              </div>
+              <div class="reveal-elem flex flex-col sm:flex-row sm:justify-between sm:items-center pb-4 group">
+                 <span class="text-white/80 font-bold mb-1 sm:mb-0 transition-colors group-hover:text-yellow-400">Terminal Klien</span>
+                 <span class="text-white/50 font-mono bg-white/5 px-3 py-1 rounded transition-colors group-hover:bg-yellow-500/10 group-hover:text-yellow-400">Tablet Android (Kiosk)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: ACTION (Closing) -->
+      <section class="slide-panel items-center justify-center">
+        <div class="max-w-4xl text-center w-full px-4">
+          <h2 class="reveal-elem font-display text-6xl md:text-[6.5rem] font-black tracking-tighter leading-[1.05] text-white mb-12">
+            Siap Mengubah <br> Demokrasi Anda?
+          </h2>
+          <div class="reveal-elem magnetic">
+            <button class="group relative inline-flex items-center gap-5 rounded-full bg-white px-10 py-5 text-lg font-bold text-black transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-[0.98]">
+              Mulai Eksekusi Aplikasi
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-black/10 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1 group-hover:-translate-y-[1px] group-hover:scale-105">
+                <i class="ph ph-rocket text-xl"></i>
+              </div>
+            </button>
+          </div>
+          
+          <div class="reveal-elem mt-24 pt-10 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <span class="text-white/40 text-sm font-medium">© 2026 Kelompok Barbarabar. All rights reserved.</span>
+            <div class="flex flex-wrap justify-center gap-4 md:gap-8">
+              <span class="text-white/30 text-sm font-medium hover:text-white transition-colors cursor-pointer magnetic-text">Yudistira</span>
+              <span class="text-white/30 text-sm font-medium hover:text-white transition-colors cursor-pointer magnetic-text">M. Adam</span>
+              <span class="text-white/30 text-sm font-medium hover:text-white transition-colors cursor-pointer magnetic-text">Wasima</span>
+              <span class="text-white/30 text-sm font-medium hover:text-white transition-colors cursor-pointer magnetic-text">Sherly</span>
+              <span class="text-white/30 text-sm font-medium hover:text-white transition-colors cursor-pointer magnetic-text">Evan</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+    // Custom Cursor Logic
+    const cursorDot = document.getElementById('cursor-dot');
+    const cursorOutline = document.getElementById('cursor-outline');
+    
+    document.addEventListener('mousemove', (e) => {
+      // Follow dot instantly
+      gsap.to(cursorDot, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+      // Follow outline with slight lag
+      gsap.to(cursorOutline, { x: e.clientX, y: e.clientY, duration: 0.4, ease: "power3.out" });
+    });
+
+    // Expand cursor on interactive elements
+    document.querySelectorAll('a, button, .magnetic-text, .cursor-pointer, .group').forEach(el => {
+      el.addEventListener('mouseenter', () => { 
+        gsap.to(cursorOutline, {width: 60, height: 60, background: 'rgba(255,255,255,0.05)'}); 
+        gsap.to(cursorDot, {scale: 0});
+      });
+      el.addEventListener('mouseleave', () => { 
+        gsap.to(cursorOutline, {width: 40, height: 40, background: 'transparent'}); 
+        gsap.to(cursorDot, {scale: 1});
+      });
+    });
+
+    // Magnetic Element Physics
+    const magneticEls = document.querySelectorAll('.magnetic');
+    magneticEls.forEach((el) => {
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const h = rect.width / 2;
+        const v = rect.height / 2;
+        const x = e.clientX - rect.left - h;
+        const y = e.clientY - rect.top - v;
+        
+        gsap.to(el, { x: x * 0.3, y: y * 0.3, duration: 0.5, ease: 'power3.out' });
+      });
+      el.addEventListener('mouseleave', () => {
+        gsap.to(el, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.3)' });
+      });
+    });
+
+    // Radial Glow on Cards following mouse
+    const glowCards = document.querySelectorAll('.bezel-inner');
+    glowCards.forEach((card) => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
+
+    // Initial Load Animation for Hero
+    gsap.from(".hero-text", { y: 60, opacity: 0, duration: 1.4, stagger: 0.15, ease: "power4.out", delay: 0.2 });
+
+    // Navigation Pill Logic
+    let navTargets = [];
+    function setupNavOffsets() {
+      navTargets = [];
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const targetId = item.getAttribute('data-target');
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          navTargets.push({
+            item: item,
+            targetId: targetId,
+            offsetLeft: targetEl.offsetLeft
+          });
+        }
+      });
+    }
+
+    function updateActiveNav(activeItem) {
+      const pill = document.getElementById('nav-pill');
+      if (!pill) return;
+
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('text-white');
+        item.classList.add('text-white/50');
+      });
+
+      if (activeItem) {
+        activeItem.classList.remove('text-white/50');
+        activeItem.classList.add('text-white');
+
+        const rect = activeItem.getBoundingClientRect();
+        const parentRect = activeItem.parentElement.getBoundingClientRect();
+
+        gsap.to(pill, {
+          x: rect.left - parentRect.left,
+          width: rect.width,
+          duration: 0.4,
+          ease: "power3.out",
+          opacity: 1
+        });
+      } else {
+        gsap.to(pill, {
+          width: 0,
+          opacity: 0,
+          duration: 0.4,
+          ease: "power3.out"
+        });
+      }
+    }
+
+    window.scrollToSlide = function(slideId) {
+      const slide = document.getElementById(slideId);
+      if (!slide) return;
+      
+      const trigger = ScrollTrigger.getById("panTrigger");
+      if (!trigger) return;
+
+      const targetY = trigger.start + slide.offsetLeft;
+
+      gsap.to(window, {
+        scrollTo: { y: targetY },
+        duration: 1.2,
+        ease: "power4.inOut"
+      });
+    };
+
+    // Main GSAP Horizontal Pan Logic
+    const wrap = document.getElementById("pan-wrapper");
+    const track = document.getElementById("pan-track");
+
+    if (wrap && track) {
+      window.onload = () => {
+        const getScrollDistance = () => track.scrollWidth - window.innerWidth;
+        
+        let panTween = gsap.to(track, {
+          x: () => -getScrollDistance(),
+          ease: "none",
+          scrollTrigger: {
+            id: "panTrigger",
+            trigger: wrap,
+            start: "top top",
+            end: () => `+=${getScrollDistance()}`,
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) => {
+              // Update progress bar
+              const progressEl = document.getElementById('nav-progress');
+              if (progressEl) {
+                progressEl.style.width = `${self.progress * 100}%`;
+              }
+
+              // Determine active slide on scroll
+              const currentX = -gsap.getProperty(track, "x");
+              const viewportWidth = window.innerWidth;
+              
+              let activeTarget = null;
+              let minDiff = Infinity;
+              
+              navTargets.forEach(t => {
+                const diff = Math.abs(t.offsetLeft - currentX);
+                if (diff < viewportWidth / 2 && diff < minDiff) {
+                  minDiff = diff;
+                  activeTarget = t;
+                }
+              });
+              
+              updateActiveNav(activeTarget ? activeTarget.item : null);
+            }
+          }
+        });
+
+        // Initialize Nav item click handlers
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const targetId = item.getAttribute('data-target');
+            window.scrollToSlide(targetId);
+          });
+        });
+
+        // Keydown Navigation (Space & Arrows)
+        function getActiveSlideIndex() {
+          const currentX = -gsap.getProperty(track, "x");
+          const slides = Array.from(document.querySelectorAll('.slide-panel'));
+          let closestIndex = 0;
+          let minDiff = Infinity;
+          
+          slides.forEach((slide, i) => {
+            const diff = Math.abs(slide.offsetLeft - currentX);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closestIndex = i;
+            }
+          });
+          return closestIndex;
+        }
+
+        function navigateSlide(direction) {
+          const slides = document.querySelectorAll('.slide-panel');
+          const currentIndex = getActiveSlideIndex();
+          let targetIndex = currentIndex + direction;
+          
+          // Wrap around to start if we exceed last slide (or stop at the end)
+          if (targetIndex >= slides.length) {
+            targetIndex = 0;
+          }
+          if (targetIndex < 0) {
+            targetIndex = slides.length - 1; // Wrap to end or stay at 0 (let's stay at 0)
+            targetIndex = 0;
+          }
+
+          const targetSlide = slides[targetIndex];
+          const trigger = ScrollTrigger.getById("panTrigger");
+          if (trigger) {
+            const targetY = trigger.start + targetSlide.offsetLeft;
+            gsap.to(window, {
+              scrollTo: { y: targetY },
+              duration: 1.0,
+              ease: "power3.inOut"
+            });
+          }
+        }
+
+        window.addEventListener('keydown', (e) => {
+          // Disable default spacebar page scrolling
+          if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            if (e.shiftKey) {
+              navigateSlide(-1);
+            } else {
+              navigateSlide(1);
+            }
+          } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+            e.preventDefault();
+            navigateSlide(1);
+          } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            navigateSlide(-1);
+          }
+        });
+
+        // Setup offsets and listen to resize / scroll refreshes
+        setupNavOffsets();
+        ScrollTrigger.addEventListener("refresh", setupNavOffsets);
+
+        // Stagger Reveal Elements in Each Slide using Container Animation
+        gsap.utils.toArray('.slide-panel').forEach((panel, i) => {
+          if (i === 0) return; // Skip Hero slide
+          
+          const elems = panel.querySelectorAll('.reveal-elem');
+          if(elems.length > 0) {
+            gsap.fromTo(elems, 
+              { y: 50, opacity: 0 },
+              {
+                y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: "power3.out",
+                scrollTrigger: {
+                  trigger: panel,
+                  containerAnimation: panTween,
+                  start: "left center+=300", 
+                  toggleActions: "play none none reverse"
+                }
+              }
+            );
+          }
+        });
+
+        // Subtle Parallax Background in Bento Cards
+        gsap.utils.toArray('.parallax-bg').forEach(bg => {
+          gsap.fromTo(bg, 
+            { x: -30 }, 
+            { 
+              x: 30,
+              ease: "none",
+              scrollTrigger: {
+                trigger: bg.closest('.slide-panel'),
+                containerAnimation: panTween,
+                start: "left right",
+                end: "right left",
+                scrub: true
+              }
+            }
+          );
+        });
+      };
+    }
+  </script>
+</body>
+</html>
