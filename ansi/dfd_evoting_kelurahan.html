@@ -232,6 +232,7 @@
     %% DATA STORES
     D1[(D1 DPT_DIGITAL)]:::datastore
     D2[(D2 KANDIDAT)]:::datastore
+    D3[(D3 USERS)]:::datastore
     D4[(D4 OTP_TOKENS)]:::datastore
     D5[(D5 SUARA_ANONIM)]:::datastore
     D6[(D6 BERITA_ACARA)]:::datastore
@@ -249,6 +250,7 @@
 
     %% ALIRAN DATA
     Admin -->|Data Warga| P1
+    D3 -->|Validasi Role Admin| P1
     P1 -->|Data Valid| D1
     P1 -->|Status| Admin
     P1 -->|DPT| Panitia
@@ -257,6 +259,7 @@
     P2 -->|Profil| D2
 
     Petugas -->|NIK| P3
+    D3 -->|Validasi Role Petugas| P3
     P3 -->|Cek NIK| D1
     P3 -->|Hash OTP| D4
     P3 -->|Status NIK & OTP| Petugas
@@ -276,11 +279,13 @@
     P5 -->|Hasil Final| P6
 
     Lurah -->|Konfirmasi Pengesahan| P6
+    D3 -->|Validasi Role Lurah| P6
     P6 -->|Dokumen BA| D6
     P6 -->|Berita Acara| Lurah
     P6 -->|Hasil Publik| Panitia
 
     Admin -->|Perintah Backup| P7
+    D3 -->|Validasi Role Admin| P7
     P7 -->|Riwayat Backup| D7
     P7 -->|Log Aktivitas| D8
     P7 -->|Status & Audit CSV| Admin`;

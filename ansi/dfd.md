@@ -56,6 +56,12 @@ flowchart TD
     Sistem -->|Dashboard Real-time| Saksi
 ```
 
+### Narasi Diagram Konteks
+
+Sistem Informasi E-Voting Tingkat Kelurahan bertindak sebagai pusat pemrosesan utama yang menerima masukan data dari entitas luar dan menghasilkan output. **Admin IT** bertugas menyuplai data master kependudukan warga serta mengamankan sistem melalui perintah backup. **Panitia Pemilihan** menginisiasi persiapan dengan memasukkan profil registrasi kandidat ke dalam sistem. 
+
+Pada hari pemungutan suara, interaksi utama terjadi di TPS: **Petugas TPS** menginput NIK untuk memvalidasi pemilih, yang kemudian dibalas oleh sistem dengan kode autentikasi OTP. **Pemilih** menggunakan OTP tersebut beserta pilihan kandidatnya untuk memberikan suara secara digital. Sebagai balasannya, sistem mencatat suara secara anonim dan memberikan token bukti kepada pemilih. Secara paralel, **Saksi Kandidat** dapat memantau pergerakan suara secara *real-time* melalui *dashboard*, tanpa memiliki hak untuk mengubah data. Setelah seluruh tahapan selesai, **Lurah** akan menutup sesi dan mengesahkan hasil akhir, di mana sistem kemudian menerbitkan Berita Acara resmi.
+
 ---
 
 ## 2. DFD Level 0
@@ -107,6 +113,7 @@ flowchart TD
     %% Data Store
     D1[(D1 DPT_DIGITAL)]:::datastore
     D2[(D2 KANDIDAT)]:::datastore
+    D3[(D3 USERS)]:::datastore
     D4[(D4 OTP_TOKENS)]:::datastore
     D5[(D5 SUARA_ANONIM)]:::datastore
     D6[(D6 BERITA_ACARA)]:::datastore
@@ -124,6 +131,7 @@ flowchart TD
 
     %% Aliran Proses 1 & 2
     Admin -->|Data Warga| P1
+    D3 -->|Validasi Role Admin| P1
     P1 -->|Data Valid| D1
     P1 -->|Status| Admin
     P1 -->|DPT| Panitia
@@ -133,6 +141,7 @@ flowchart TD
 
     %% Aliran Proses 3
     Petugas -->|NIK| P3
+    D3 -->|Validasi Role Petugas| P3
     P3 -->|Cek NIK| D1
     P3 -->|Hash OTP| D4
     P3 -->|Status NIK & OTP| Petugas
@@ -154,13 +163,26 @@ flowchart TD
     P5 -->|Hasil Final| P6
 
     Lurah -->|Konfirmasi Pengesahan| P6
+    D3 -->|Validasi Role Lurah| P6
     P6 -->|Dokumen BA| D6
     P6 -->|Berita Acara| Lurah
     P6 -->|Hasil Publik| Panitia
 
     %% Aliran Proses 7
     Admin -->|Perintah Backup| P7
+    D3 -->|Validasi Role Admin| P7
     P7 -->|Riwayat Backup| D7
     P7 -->|Log Aktivitas| D8
     P7 -->|Status & Audit CSV| Admin
 ```
+
+### Penjelasan Aliran Data DFD Level 0
+
+DFD Level 0 memecah sistem tunggal menjadi tujuh subsistem (proses) yang saling terhubung secara terstruktur melalui penyimpanan data (*Data Store*). 
+
+1. **Proses 1.0 (Manajemen DPT)** dan **2.0 (Manajemen Kandidat)** merupakan tahap persiapan pra-pemilihan. Admin IT dan Panitia mengisi master data dasar ke dalam tabel `DPT_DIGITAL` (D1) dan `KANDIDAT` (D2).
+2. **Proses 3.0 (Verifikasi & Autentikasi)** adalah gerbang keamanan akses. NIK yang diinput oleh Petugas TPS akan dicocokkan dengan D1. Jika NIK terdaftar dan belum memilih, sistem akan membuat OTP yang di-*hash* lalu disimpan di `OTP_TOKENS` (D4).
+3. **Proses 4.0 (Pemungutan Suara)** hanya mengizinkan akses jika input OTP dari pemilih tervalidasi oleh P3. Pilihan warga kemudian dienkripsi dan disimpan di `SUARA_ANONIM` (D5), yang dirancang **tanpa** relasi NIK pemilih demi menjamin asas kerahasiaan (*anonymity*). Setelah mencoblos, status pemilih di D1 diperbarui menjadi sudah memilih.
+4. **Proses 5.0 (Rekapitulasi & Hitung)** secara dinamis membaca tumpukan data dari D5 lalu mengagregasinya menjadi grafik statistik partisipasi dan kalkulasi suara untuk ditampilkan kepada Saksi dan Panitia secara *real-time*.
+5. **Proses 6.0 (Pengesahan & Pelaporan)** berjalan atas instruksi Lurah. Data tabulasi akhir dari P5 akan dikunci, dikonversi menjadi dokumen legal, dan diarsipkan secara permanen di dalam `BERITA_ACARA` (D6).
+6. **Proses 7.0 (Backup & Audit)** merupakan proses keamanan yang beroperasi mengawasi seluruh aktivitas sensitif dari proses 1.0 hingga 6.0. Jejak langkah pengguna disimpan dalam `AUDIT_LOG` (D8) untuk kebutuhan investigasi jika terjadi sengketa, sementara catatan pencadangan fisik dicatat di `BACKUP_LOG` (D7).
